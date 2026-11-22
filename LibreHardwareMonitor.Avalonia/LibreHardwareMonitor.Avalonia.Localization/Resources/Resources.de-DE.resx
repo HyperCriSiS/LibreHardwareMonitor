@@ -85,6 +85,15 @@
   <data name="StatusMonitoringUnavailableFormat" xml:space="preserve">
     <value>Sensorüberwachung nicht verfügbar: {0}</value>
   </data>
+  <data name="GroupingLabel" xml:space="preserve">
+    <value>Gruppieren nach</value>
+  </data>
+  <data name="GroupingHardware" xml:space="preserve">
+    <value>Hardware</value>
+  </data>
+  <data name="GroupingSensorType" xml:space="preserve">
+    <value>Sensortyp</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Spannungen</value>
   </data>

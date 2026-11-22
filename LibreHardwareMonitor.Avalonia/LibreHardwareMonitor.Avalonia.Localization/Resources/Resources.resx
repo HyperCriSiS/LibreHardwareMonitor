@@ -85,6 +85,15 @@
   <data name="StatusMonitoringUnavailableFormat" xml:space="preserve">
     <value>Sensor monitoring unavailable: {0}</value>
   </data>
+  <data name="GroupingLabel" xml:space="preserve">
+    <value>Group by</value>
+  </data>
+  <data name="GroupingHardware" xml:space="preserve">
+    <value>Hardware</value>
+  </data>
+  <data name="GroupingSensorType" xml:space="preserve">
+    <value>Sensor type</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Voltages</value>
   </data>

@@ -5,6 +5,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LibreHardwareMonitor.Avalonia.Localization.Services;
 using LibreHardwareMonitor.Avalonia.Monitoring.Models;
+using LibreHardwareMonitor.Avalonia.Monitoring.Services;
 using LibreHardwareMonitor.Avalonia.Mvvm.Services;
 using LanguageResources = LibreHardwareMonitor.Avalonia.Localization.Resources.Resources;
 
@@ -15,12 +16,60 @@ namespace LibreHardwareMonitor.Avalonia.Mvvm.ViewModels;
 /// </summary>
 public sealed class MainWindowViewModel : ObservableObject
 {
+    /// <summary>
+    /// Keeps one tree per grouping, so expanded nodes are preserved when switching.
+    /// </summary>
+    private readonly Dictionary<SensorGrouping, ObservableCollection<SensorTreeNodeViewModel>> _trees = new();
+
+    private SensorTreeSnapshot _snapshot;
+    private SensorGroupingOption _selectedGrouping;
     private string _status = LanguageResources.StatusSearching;
+
+    /// <summary>
+    /// Initializes the main window with sensors grouped by hardware.
+    /// </summary>
+    public MainWindowViewModel()
+    {
+        foreach (SensorGroupingOption option in Groupings)
+        {
+            _trees.Add(option.Grouping, new ObservableCollection<SensorTreeNodeViewModel>());
+        }
+
+        _selectedGrouping = Groupings[0];
+    }
+
+    /// <summary>
+    /// Gets the available arrangements of the sensor tree.
+    /// </summary>
+    public IReadOnlyList<SensorGroupingOption> Groupings { get; } =
+    [
+        new(SensorGrouping.Hardware, LanguageResources.GroupingHardware),
+        new(SensorGrouping.SensorType, LanguageResources.GroupingSensorType)
+    ];
+
+    /// <summary>
+    /// Gets or sets the current arrangement of the sensor tree.
+    /// </summary>
+    public SensorGroupingOption SelectedGrouping
+    {
+        get { return _selectedGrouping; }
+        set
+        {
+            if (value != null && SetProperty(ref _selectedGrouping, value))
+            {
+                UpdateTree();
+                OnPropertyChanged(nameof(Hardware));
+            }
+        }
+    }
 
     /// <summary>
     /// Gets the root nodes of the sensor tree.
     /// </summary>
-    public ObservableCollection<SensorTreeNodeViewModel> Hardware { get; } = new();
+    public ObservableCollection<SensorTreeNodeViewModel> Hardware
+    {
+        get { return _trees[SelectedGrouping.Grouping]; }
+    }
 
     /// <summary>
     /// Gets the latest localized monitoring status.
@@ -37,7 +86,8 @@ public sealed class MainWindowViewModel : ObservableObject
     /// <param name="snapshot">The latest sensor tree snapshot.</param>
     public void Apply(SensorTreeSnapshot snapshot)
     {
-        SensorTreeReconciler.Reconcile(Hardware, snapshot.Roots);
+        _snapshot = snapshot;
+        UpdateTree();
 
         string format = snapshot.Roots.Count > 0 && snapshot.Roots[0].Children.Count == 0
             ? LanguageResources.StatusUpdatedNoHardwareFormat
@@ -55,5 +105,16 @@ public sealed class MainWindowViewModel : ObservableObject
     public void ShowError(string message)
     {
         Status = string.Format(CultureInfo.CurrentCulture, LanguageResources.StatusMonitoringUnavailableFormat, message);
+    }
+
+    /// <summary>
+    /// Updates the visible tree from the latest snapshot.
+    /// </summary>
+    private void UpdateTree()
+    {
+        if (_snapshot != null)
+        {
+            SensorTreeReconciler.Reconcile(Hardware, SensorTreeGrouping.GetRoots(_snapshot, SelectedGrouping.Grouping));
+        }
     }
 }

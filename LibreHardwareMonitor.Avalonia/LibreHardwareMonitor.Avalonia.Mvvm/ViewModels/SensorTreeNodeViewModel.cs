@@ -29,7 +29,9 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
         Identifier = snapshot.Identifier;
         Kind = snapshot.Kind;
 
-        _isExpanded = Kind == SensorTreeNodeKind.Computer;
+        // Hardware grouped below a sensor type lists its sensors directly.
+        _isExpanded = Kind == SensorTreeNodeKind.Computer ||
+                      Kind == SensorTreeNodeKind.Hardware && snapshot.Children.Any(child => child.Kind == SensorTreeNodeKind.Sensor);
 
         Update(snapshot);
     }
