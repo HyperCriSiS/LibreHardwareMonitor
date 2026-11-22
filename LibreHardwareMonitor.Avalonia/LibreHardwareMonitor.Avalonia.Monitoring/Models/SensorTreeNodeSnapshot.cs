@@ -21,6 +21,7 @@ public sealed class SensorTreeNodeSnapshot
     /// <param name="min">The minimum sensor value, when available.</param>
     /// <param name="max">The maximum sensor value, when available.</param>
     /// <param name="children">The child nodes.</param>
+    /// <param name="properties">The static hardware properties, if applicable.</param>
     public SensorTreeNodeSnapshot(string identifier,
         string name,
         SensorTreeNodeKind kind,
@@ -29,7 +30,8 @@ public sealed class SensorTreeNodeSnapshot
         float? value,
         float? min,
         float? max,
-        IReadOnlyList<SensorTreeNodeSnapshot> children)
+        IReadOnlyList<SensorTreeNodeSnapshot> children,
+        IReadOnlyDictionary<string, string> properties = null)
     {
         Identifier = identifier;
         Name = name;
@@ -40,6 +42,7 @@ public sealed class SensorTreeNodeSnapshot
         Min = min;
         Max = max;
         Children = children;
+        Properties = properties;
     }
 
     /// <summary>
@@ -86,4 +89,9 @@ public sealed class SensorTreeNodeSnapshot
     /// Gets the child nodes.
     /// </summary>
     public IReadOnlyList<SensorTreeNodeSnapshot> Children { get; }
+
+    /// <summary>
+    /// Gets the static hardware properties, or null for other nodes.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> Properties { get; }
 }

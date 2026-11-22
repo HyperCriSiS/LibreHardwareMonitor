@@ -52,6 +52,11 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
     public ObservableCollection<SensorTreeNodeViewModel> Children { get; } = new();
 
     /// <summary>
+    /// Gets the latest snapshot of the node.
+    /// </summary>
+    public SensorTreeNodeSnapshot Snapshot { get; private set; }
+
+    /// <summary>
     /// Gets or sets whether the node is expanded in the grid.
     /// </summary>
     public bool IsExpanded
@@ -111,6 +116,7 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
     /// <param name="snapshot">The latest node state.</param>
     public void Update(SensorTreeNodeSnapshot snapshot)
     {
+        Snapshot = snapshot;
         Name = snapshot.Name;
         IconName = SensorIconName.GetName(snapshot);
 

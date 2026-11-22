@@ -97,6 +97,7 @@ public static class SensorTreeGrouping
             node.Value,
             node.Min,
             node.Max,
-            children);
+            children,
+            node.Properties);
     }
 }
