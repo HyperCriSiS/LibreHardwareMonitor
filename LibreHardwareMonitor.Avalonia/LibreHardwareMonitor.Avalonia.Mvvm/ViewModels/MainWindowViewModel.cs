@@ -27,6 +27,8 @@ public sealed class MainWindowViewModel : ObservableObject
     private IReadOnlyList<DetailViewModel> _details = [];
     private bool _isDetailsVisible;
     private string _filterText = string.Empty;
+    private readonly HashSet<string> _hiddenSensors = new();
+    private bool _showHidden;
     private SensorSortOption _selectedSortOrder;
     private string _status = LanguageResources.StatusSearching;
 
@@ -107,6 +109,68 @@ public sealed class MainWindowViewModel : ObservableObject
             {
                 UpdateTree();
             }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether hidden sensors are shown.
+    /// </summary>
+    public bool ShowHidden
+    {
+        get { return _showHidden; }
+        set
+        {
+            if (SetProperty(ref _showHidden, value))
+            {
+                UpdateTree();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Hides or shows the given sensors, including all sensors below the given hardware and categories.
+    /// </summary>
+    /// <param name="nodes">The selected nodes.</param>
+    /// <param name="isHidden">True to hide the sensors, false to show them again.</param>
+    public void SetHidden(IEnumerable<SensorTreeNodeViewModel> nodes, bool isHidden)
+    {
+        foreach (string identifier in nodes.SelectMany(GetSensorIdentifiers).ToList())
+        {
+            if (isHidden)
+            {
+                _hiddenSensors.Add(identifier);
+            }
+            else
+            {
+                _hiddenSensors.Remove(identifier);
+            }
+        }
+
+        UpdateTree();
+    }
+
+    /// <summary>
+    /// Gets the identifiers of a sensor or of all sensors below a node.
+    /// </summary>
+    /// <param name="node">The node to search.</param>
+    /// <returns>The sensor identifiers.</returns>
+    private static IEnumerable<string> GetSensorIdentifiers(SensorTreeNodeViewModel node)
+    {
+        return node.Kind == SensorTreeNodeKind.Sensor
+            ? [node.Identifier]
+            : node.Children.SelectMany(GetSensorIdentifiers);
+    }
+
+    /// <summary>
+    /// Marks the hidden sensors that are shown.
+    /// </summary>
+    /// <param name="nodes">The nodes to mark.</param>
+    private void MarkHidden(IEnumerable<SensorTreeNodeViewModel> nodes)
+    {
+        foreach (SensorTreeNodeViewModel node in nodes)
+        {
+            node.IsHidden = node.Kind == SensorTreeNodeKind.Sensor && _hiddenSensors.Contains(node.Identifier);
+            MarkHidden(node.Children);
         }
     }
 
@@ -196,7 +260,8 @@ public sealed class MainWindowViewModel : ObservableObject
         {
             IReadOnlyList<SensorTreeNodeSnapshot> roots = SensorTreeGrouping.GetRoots(_snapshot, SelectedGrouping.Grouping);
 
-            SensorTreeReconciler.Reconcile(Hardware, SensorTreeFilter.Apply(roots, FilterText, SelectedSortOrder.SortOrder));
+            SensorTreeReconciler.Reconcile(Hardware, SensorTreeFilter.Apply(roots, FilterText, SelectedSortOrder.SortOrder, ShowHidden ? null : _hiddenSensors));
+            MarkHidden(Hardware);
             UpdateDetails();
         }
     }

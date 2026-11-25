@@ -15,17 +15,19 @@ public static class SensorTreeFilter
     /// <param name="roots">The root nodes to filter.</param>
     /// <param name="text">The text to search in sensor, category and hardware names, or empty to keep all sensors.</param>
     /// <param name="sortOrder">The order of the sensors within their parent.</param>
+    /// <param name="hiddenSensors">The identifiers of sensors to leave out, or null to keep all sensors.</param>
     /// <returns>The filtered and sorted root nodes.</returns>
     public static IReadOnlyList<SensorTreeNodeSnapshot> Apply(IReadOnlyList<SensorTreeNodeSnapshot> roots,
         string text,
-        SensorSortOrder sortOrder)
+        SensorSortOrder sortOrder,
+        IReadOnlySet<string> hiddenSensors = null)
     {
-        if (string.IsNullOrWhiteSpace(text) && sortOrder == SensorSortOrder.Default)
+        if (string.IsNullOrWhiteSpace(text) && sortOrder == SensorSortOrder.Default && !(hiddenSensors?.Count > 0))
         {
             return roots;
         }
 
-        return roots.Select(root => Apply(root, text?.Trim(), false, sortOrder)).ToList();
+        return roots.Select(root => Apply(root, text?.Trim(), false, sortOrder, hiddenSensors)).ToList();
     }
 
     /// <summary>
@@ -35,11 +37,13 @@ public static class SensorTreeFilter
     /// <param name="text">The text to search, or empty to keep all sensors.</param>
     /// <param name="isMatched">Whether a parent node already matches the text.</param>
     /// <param name="sortOrder">The order of the sensors within their parent.</param>
+    /// <param name="hiddenSensors">The identifiers of sensors to leave out, or null to keep all sensors.</param>
     /// <returns>The processed node, or null if neither it nor its children match.</returns>
     private static SensorTreeNodeSnapshot Apply(SensorTreeNodeSnapshot node,
         string text,
         bool isMatched,
-        SensorSortOrder sortOrder)
+        SensorSortOrder sortOrder,
+        IReadOnlySet<string> hiddenSensors)
     {
         // The computer name is not searched, because it would match every sensor.
         isMatched = isMatched ||
@@ -49,11 +53,11 @@ public static class SensorTreeFilter
 
         if (node.Kind == SensorTreeNodeKind.Sensor)
         {
-            return isMatched ? node : null;
+            return isMatched && hiddenSensors?.Contains(node.Identifier) != true ? node : null;
         }
 
         IEnumerable<SensorTreeNodeSnapshot> children = node.Children
-                                                           .Select(child => Apply(child, text, isMatched, sortOrder))
+                                                           .Select(child => Apply(child, text, isMatched, sortOrder, hiddenSensors))
                                                            .Where(child => child != null);
 
         children = sortOrder switch
