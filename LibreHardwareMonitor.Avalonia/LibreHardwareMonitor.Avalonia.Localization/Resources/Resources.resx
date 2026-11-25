@@ -112,6 +112,24 @@
   <data name="DetailIdentifier" xml:space="preserve">
     <value>Identifier</value>
   </data>
+  <data name="SortLabel" xml:space="preserve">
+    <value>Sort by</value>
+  </data>
+  <data name="SortDefault" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="SortName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SortValue" xml:space="preserve">
+    <value>Highest value</value>
+  </data>
+  <data name="FilterPlaceholder" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="ColumnAverage" xml:space="preserve">
+    <value>Average</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Voltages</value>
   </data>
