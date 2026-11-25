@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -62,6 +63,28 @@ public sealed class StorageDevice : Hardware, ISmart
     public override HardwareType HardwareType => HardwareType.Storage;
 
     public StorageDeviceDIT Storage => _storage;
+
+    public override IDictionary<string, string> Properties
+    {
+        get
+        {
+            SortedDictionary<string, string> properties = new();
+
+            AddProperty("Model", _storage.ProductName);
+            AddProperty("Firmware", _storage.ProductRevision);
+            AddProperty("Bus type", _storage.BusType.ToString());
+            AddProperty("Controller", _storage.Controller?.DeviceName);
+            AddProperty("Controller vendor", _storage.Controller?.VendorName);
+
+            return properties;
+
+            void AddProperty(string name, string value)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                    properties.Add(name, value);
+            }
+        }
+    }
 
     public IReadOnlyList<SmartAttribute> Attributes => _attributes;
 
