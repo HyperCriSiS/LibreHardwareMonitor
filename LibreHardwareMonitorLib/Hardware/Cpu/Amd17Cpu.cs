@@ -42,10 +42,8 @@ internal sealed class Amd17Cpu : AmdCpu
 
         // Ryzen 3000's skip some core ids.
         // So start at 1 and count upwards when the read core changes.
-        foreach (CpuId[] cpu in cpuId.OrderBy(x => x[0].ExtData[0x1e, 1] & 0xFF))
+        foreach (CpuId thread in cpuId.SelectMany(x => x).OrderBy(x => x.ExtData[0x1e, 1] & 0xFF))
         {
-            CpuId thread = cpu[0];
-
             // CPUID_Fn8000001E_EBX, Register ..1E_1, [7:0]
             // threads per core =  CPUID_Fn8000001E_EBX[15:8] + 1
             // CoreId: core ID =  CPUID_Fn8000001E_EBX[7:0]

@@ -188,6 +188,14 @@ public class CpuId
                         0x06 => NextLog2(64), // Epic
                         _ => coreMaskWith
                     };
+
+                    // The APIC ID also contains the thread bits, so split them off to group SMT threads by core.
+                    // ThreadsPerCore = CPUID_Fn8000001E_EBX[15:8] + 1
+                    if (maxCpuidExt >= 0x1E)
+                    {
+                        threadMaskWith = NextLog2(((ExtData[0x1E, 1] >> 8) & 0xFF) + 1);
+                        coreMaskWith = coreMaskWith > threadMaskWith ? coreMaskWith - threadMaskWith : 0;
+                    }
                 }
 
                 break;
