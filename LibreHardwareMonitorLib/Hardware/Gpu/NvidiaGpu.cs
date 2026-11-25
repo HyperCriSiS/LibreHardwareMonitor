@@ -1048,6 +1048,35 @@ internal sealed class NvidiaGpu : GenericGpu
         return true;
     }
 
+    public override IDictionary<string, string> Properties
+    {
+        get
+        {
+            SortedDictionary<string, string> properties = new();
+
+            if (_displayHandle.HasValue && NvApi.NvAPI_GetDisplayDriverVersion != null)
+            {
+                NvApi.NvDisplayDriverVersion driverVersion = new() { Version = (uint)NvApi.MAKE_NVAPI_VERSION<NvApi.NvDisplayDriverVersion>(1) };
+                if (NvApi.NvAPI_GetDisplayDriverVersion(_displayHandle.Value, ref driverVersion) == NvApi.NvStatus.OK)
+                {
+                    properties.Add("Driver version", string.Format(CultureInfo.InvariantCulture, "{0}.{1:00}", driverVersion.DriverVersion / 100, driverVersion.DriverVersion % 100));
+
+                    if (!string.IsNullOrWhiteSpace(driverVersion.BuildBranch))
+                        properties.Add("Driver branch", driverVersion.BuildBranch);
+                }
+            }
+
+            if (NvApi.NvAPI_GPU_GetPCIIdentifiers != null &&
+                NvApi.NvAPI_GPU_GetPCIIdentifiers(_handle, out uint deviceId, out uint subSystemId, out _, out _) == NvApi.NvStatus.OK)
+            {
+                properties.Add("Device ID", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", deviceId));
+                properties.Add("Subsystem ID", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", subSystemId));
+            }
+
+            return properties;
+        }
+    }
+
     public override string GetReport()
     {
         StringBuilder r = new();
