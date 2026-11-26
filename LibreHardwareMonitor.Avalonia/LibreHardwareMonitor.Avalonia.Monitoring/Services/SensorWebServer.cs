@@ -23,6 +23,7 @@ public sealed class SensorWebServer : IDisposable
     };
 
     private readonly HttpListener _listener = new();
+    private readonly bool _localOnly;
     private SensorTreeSnapshot _snapshot;
 
     /// <summary>
@@ -30,10 +31,23 @@ public sealed class SensorWebServer : IDisposable
     /// </summary>
     /// <param name="port">The TCP port.</param>
     /// <param name="localOnly">True to accept only requests from this computer.</param>
-    public SensorWebServer(int port, bool localOnly)
+    /// <param name="snapshot">The latest readings, so the first requests already get data, or null.</param>
+    public SensorWebServer(int port, bool localOnly, SensorTreeSnapshot snapshot = null)
     {
+        _localOnly = localOnly;
+        _snapshot = snapshot;
         _listener.Prefixes.Add(localOnly ? $"http://localhost:{port}/" : $"http://+:{port}/");
-        _listener.Start();
+
+        try
+        {
+            _listener.Start();
+        }
+        catch
+        {
+            _listener.Close();
+            throw;
+        }
+
         _ = Task.Run(ListenAsync);
     }
 
@@ -60,7 +74,8 @@ public sealed class SensorWebServer : IDisposable
     }
 
     /// <summary>
-    /// Answers requests until the listener is closed.
+    /// Accepts requests until the listener is closed. Each request is answered on its own, so a slow client does not
+    /// hold up the others.
     /// </summary>
     private async Task ListenAsync()
     {
@@ -76,40 +91,63 @@ public sealed class SensorWebServer : IDisposable
             {
                 return;
             }
-            catch (HttpListenerException)
+            catch (Exception)
             {
+                // Avoid spinning if accepting keeps failing.
+                await Task.Delay(100);
                 continue;
             }
 
+            _ = Task.Run(() => RespondAsync(context));
+        }
+    }
+
+    /// <summary>
+    /// Answers one request and always ends it, also when the client has gone away.
+    /// </summary>
+    private async Task RespondAsync(HttpListenerContext context)
+    {
+        try
+        {
+            await WriteResponseAsync(context);
+            context.Response.Close();
+        }
+        catch (Exception)
+        {
+            // A client that disconnects early must not stop the server.
             try
             {
-                Respond(context);
+                context.Response.Abort();
             }
             catch (Exception)
             {
-                // A client that disconnects early must not stop the server.
-            }
-            finally
-            {
-                context.Response.Close();
+                // Already gone.
             }
         }
     }
 
     /// <summary>
-    /// Writes data.json, or 404 for any other path and 405 for methods other than GET.
+    /// Writes data.json, or 403 for requests that are not allowed, 404 for any other path and 405 for methods other
+    /// than GET.
     /// </summary>
-    private void Respond(HttpListenerContext context)
+    private async Task WriteResponseAsync(HttpListenerContext context)
     {
+        HttpListenerRequest request = context.Request;
         HttpListenerResponse response = context.Response;
 
-        if (context.Request.HttpMethod != "GET")
+        if (!IsAllowed(request))
+        {
+            response.StatusCode = 403;
+            return;
+        }
+
+        if (request.HttpMethod != "GET")
         {
             response.StatusCode = 405;
             return;
         }
 
-        if (!string.Equals(context.Request.Url?.AbsolutePath, "/data.json", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(request.Url?.AbsolutePath, "/data.json", StringComparison.OrdinalIgnoreCase))
         {
             response.StatusCode = 404;
             return;
@@ -119,7 +157,30 @@ public sealed class SensorWebServer : IDisposable
         response.ContentType = "application/json; charset=utf-8";
         response.AddHeader("Cache-Control", "no-cache");
         response.ContentLength64 = buffer.Length;
-        response.OutputStream.Write(buffer, 0, buffer.Length);
+        await response.OutputStream.WriteAsync(buffer);
+    }
+
+    /// <summary>
+    /// Checks where a request comes from and which host it names.
+    /// </summary>
+    /// <param name="request">The request.</param>
+    /// <returns>True if the request may be answered.</returns>
+    private bool IsAllowed(HttpListenerRequest request)
+    {
+        // HTTP.sys matches the localhost prefix by the Host header, so a client on the network could send
+        // "Host: localhost". Only the address of the connection proves the request comes from this computer.
+        if (_localOnly)
+            return request.RemoteEndPoint is { } remote && IPAddress.IsLoopback(remote.Address);
+
+        // Against DNS rebinding, a website must not reach the server under a name of its own. IP addresses,
+        // localhost and the name of this computer are fine.
+        string host = request.Url?.Host ?? string.Empty;
+        string machine = Environment.MachineName;
+
+        return IPAddress.TryParse(host.Trim('[', ']'), out _) ||
+               string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(host, machine, StringComparison.OrdinalIgnoreCase) ||
+               host.StartsWith(machine + ".", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

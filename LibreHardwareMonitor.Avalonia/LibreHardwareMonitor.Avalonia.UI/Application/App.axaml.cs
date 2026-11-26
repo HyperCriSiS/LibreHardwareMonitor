@@ -6,6 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using LibreHardwareMonitor.Avalonia.Monitoring.Models;
 using LibreHardwareMonitor.Avalonia.Monitoring.Services;
 using LibreHardwareMonitor.Avalonia.Mvvm.Services;
 using LibreHardwareMonitor.Avalonia.Mvvm.ViewModels;
@@ -27,6 +28,7 @@ public sealed partial class App : AvaloniaApplication
     /// </summary>
     private SensorMonitor _monitor;
     private SensorWebServer _webServer;
+    private volatile SensorTreeSnapshot _lastSnapshot;
     private (bool Enabled, bool LocalOnly, int Port) _webServerConfiguration;
 
     /// <summary>
@@ -70,7 +72,7 @@ public sealed partial class App : AvaloniaApplication
 
         try
         {
-            _webServer = new SensorWebServer(wanted.Port, wanted.LocalOnly);
+            _webServer = new SensorWebServer(wanted.Port, wanted.LocalOnly, _lastSnapshot);
             viewModel.WebServerStatus = _webServer.DataAddress;
         }
         catch (Exception exception)
@@ -109,7 +111,11 @@ public sealed partial class App : AvaloniaApplication
             viewModel.RenameRequested += _monitor.Rename;
 
             _monitor.SnapshotAvailable += snapshot => Dispatcher.UIThread.Post(() => viewModel.Apply(snapshot));
-            _monitor.SnapshotAvailable += snapshot => _webServer?.Update(snapshot);
+            _monitor.SnapshotAvailable += snapshot =>
+            {
+                _lastSnapshot = snapshot;
+                _webServer?.Update(snapshot);
+            };
             viewModel.SettingsChanged += () => UpdateWebServer(viewModel);
             UpdateWebServer(viewModel);
             _monitor.ErrorOccurred += message => Dispatcher.UIThread.Post(() => viewModel.ShowError(message));
