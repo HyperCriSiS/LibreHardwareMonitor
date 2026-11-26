@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Intel CPUs that the app does not know yet read TjMax from the processor instead of assuming 100 °C, so their core temperatures are right.
 - CPU load sensors get unique identifiers and correct values on systems with more than 64 logical processors, and every CPU of a multi-socket system shows its thread loads. Reported in upstream issue 1703.
 - IPMI no longer fails when the board controller answers the SDR repository request with a completion code only. Reported in upstream issue 2599.
 - Intel CPU power is read on its own package, so systems with several CPUs no longer show hundreds of thousands of watts. Reported in upstream issue 2018.
