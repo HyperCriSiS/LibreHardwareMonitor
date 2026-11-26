@@ -4,6 +4,7 @@
 
 ### Added
 
+- The sensor mapping can rename a sensor right away, starting with a suggested name, and hide inputs that look unconnected.
 - A warning in the status bar when PawnIO is missing or outdated, because CPU, motherboard and memory sensors then stay empty. Prompted by upstream issues 2348 and 2363.
 - Temperature names for the MSI MEG Z690 Unify, including both T sensors, PCIe and M.2. Data from upstream issue 1306.
 

@@ -82,7 +82,7 @@ public sealed partial class MainWindow : DecoratedWindow
     {
         if (DataContext is MainWindowViewModel viewModel)
         {
-            new SensorMappingWindow(viewModel.Mapping).Show(this);
+            new SensorMappingWindow(viewModel).Show(this);
         }
     }
 
