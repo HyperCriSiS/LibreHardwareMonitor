@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using LibreHardwareMonitor.Hardware.Motherboard.Lpc;
@@ -140,7 +141,28 @@ public class Motherboard : IHardware
     }
 
     /// <inheritdoc />
-    public virtual IDictionary<string, string> Properties => new SortedDictionary<string, string>();
+    public virtual IDictionary<string, string> Properties
+    {
+        get
+        {
+            SortedDictionary<string, string> properties = new();
+
+            AddProperty("Manufacturer", SMBios.Board?.ManufacturerName);
+            AddProperty("Product", SMBios.Board?.ProductName);
+            AddProperty("Version", SMBios.Board?.Version);
+            AddProperty("BIOS vendor", SMBios.Bios?.Vendor);
+            AddProperty("BIOS version", SMBios.Bios?.Version);
+            AddProperty("BIOS date", SMBios.Bios?.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+            return properties;
+
+            void AddProperty(string name, string value)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                    properties.Add(name, value);
+            }
+        }
+    }
 
     /// <inheritdoc />
     public ISensor[] Sensors
