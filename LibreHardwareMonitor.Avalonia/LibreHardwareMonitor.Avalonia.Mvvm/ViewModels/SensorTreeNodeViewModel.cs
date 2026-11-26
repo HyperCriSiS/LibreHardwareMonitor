@@ -115,6 +115,45 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Gets whether the node has children that can be expanded at once.
+    /// </summary>
+    public bool HasNestedChildren
+    {
+        get { return Children.Any(child => child.Children.Count > 0); }
+    }
+
+    /// <summary>
+    /// Expands or collapses the node and everything below it.
+    /// </summary>
+    /// <param name="isExpanded">True to expand, false to collapse.</param>
+    public void SetExpandedRecursive(bool isExpanded)
+    {
+        // Children first, so the tree does not render intermediate states of each level.
+        foreach (SensorTreeNodeViewModel child in Children)
+        {
+            child.SetExpandedRecursive(isExpanded);
+        }
+
+        if (Children.Count > 0)
+        {
+            IsExpanded = isExpanded;
+        }
+    }
+
+    /// <summary>
+    /// Expands everything below the node if anything is collapsed, otherwise collapses everything.
+    /// </summary>
+    public void ToggleExpandedRecursive()
+    {
+        SetExpandedRecursive(!IsFullyExpanded(this));
+
+        static bool IsFullyExpanded(SensorTreeNodeViewModel node)
+        {
+            return node.Children.Count == 0 || node.IsExpanded && node.Children.All(IsFullyExpanded);
+        }
+    }
+
+    /// <summary>
     /// Gets whether the node is a category that lists sensors, whose row shows sortable column captions.
     /// </summary>
     public bool IsCategory
@@ -181,5 +220,6 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
         }
 
         SensorTreeReconciler.Reconcile(Children, snapshot.Children);
+        OnPropertyChanged(nameof(HasNestedChildren));
     }
 }

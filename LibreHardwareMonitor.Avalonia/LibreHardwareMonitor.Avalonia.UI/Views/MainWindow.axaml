@@ -77,6 +77,11 @@
                            MinWidth="300">
             <tree:TreeDataGrid.ContextMenu>
                 <ContextMenu>
+                    <MenuItem Header="{x:Static language:Resources.ExpandAll}"
+                              Click="OnExpandAllClick"/>
+                    <MenuItem Header="{x:Static language:Resources.CollapseAll}"
+                              Click="OnCollapseAllClick"/>
+                    <Separator/>
                     <MenuItem Header="{x:Static language:Resources.Rename}"
                               InputGesture="F2"
                               Click="OnRenameClick"/>
@@ -89,6 +94,16 @@
             </tree:TreeDataGrid.ContextMenu>
 
             <tree:TreeDataGrid.Styles>
+                <Style Selector="Button.expand-all">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="4,0"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="Opacity" Value="0"/>
+                </Style>
+                <Style Selector="primitives|TreeDataGridRow:pointerover Button.expand-all, Button.expand-all:focus-visible">
+                    <Setter Property="Opacity" Value="0.7"/>
+                </Style>
                 <Style Selector="Button.column-caption">
                     <Setter Property="Background" Value="Transparent"/>
                     <Setter Property="BorderThickness" Value="0"/>
@@ -125,6 +140,12 @@
                                                    Opacity="{Binding IsHidden, Converter={x:Static converters:HiddenOpacityConverter.Instance}}"
                                                    Text="{Binding Name}"
                                                    TextTrimming="CharacterEllipsis"/>
+                                        <Button Classes="expand-all"
+                                                IsVisible="{Binding HasNestedChildren}"
+                                                Content="&#x21C5;"
+                                                ToolTip.Tip="{x:Static language:Resources.ToggleAllHint}"
+                                                AutomationProperties.Name="{x:Static language:Resources.ToggleAllHint}"
+                                                Click="OnToggleAllClick"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </tree:TreeDataGridTemplateColumn.CellTemplate>

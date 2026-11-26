@@ -250,6 +250,15 @@
   <data name="FamilyMemory" xml:space="preserve">
     <value>Arbeitsspeicher</value>
   </data>
+  <data name="ExpandAll" xml:space="preserve">
+    <value>Alles darunter aufklappen</value>
+  </data>
+  <data name="CollapseAll" xml:space="preserve">
+    <value>Alles darunter zuklappen</value>
+  </data>
+  <data name="ToggleAllHint" xml:space="preserve">
+    <value>Alles darunter auf- oder zuklappen</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Spannungen</value>
   </data>
