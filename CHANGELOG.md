@@ -5,6 +5,7 @@
 ### Added
 
 - A history of the selected sensor in the details pane: the last five minutes as a line with the lowest and highest reading.
+- An icon in the notification area with the pinned sensors as tooltip, a menu to show the window or exit, and an option to minimize to the notification area.
 - A read-only web server for other apps (Options, off by default): data.json in the format of the classic app on port 8085, only from this computer unless that option is turned off. Asked for in upstream issue 1035 and others.
 - The sensor mapping can rename a sensor right away, starting with a suggested name, and hide inputs that look unconnected.
 - A dashboard: pin sensors from the tree (context menu) and see them as tiles with the current value and the last minute as a line. Pinned sensors and the view are kept between sessions.
@@ -14,6 +15,7 @@
 
 ### Fixed
 
+- Intel CPUs that the app does not know yet read TjMax from the processor instead of assuming 100 °C, so their core temperatures are right.
 - CPU load sensors get unique identifiers and correct values on systems with more than 64 logical processors, and every CPU of a multi-socket system shows its thread loads. Reported in upstream issue 1703.
 - IPMI no longer fails when the board controller answers the SDR repository request with a completion code only. Reported in upstream issue 2599.
 - Intel CPU power is read on its own package, so systems with several CPUs no longer show hundreds of thousands of watts. Reported in upstream issue 2018.

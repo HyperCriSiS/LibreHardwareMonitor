@@ -47,6 +47,16 @@ public sealed class ViewSettings
     public List<string> PinnedSensors { get; set; } = [];
 
     /// <summary>
+    /// Gets or sets whether an icon in the notification area shows the pinned sensors.
+    /// </summary>
+    public bool IsTrayIconEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets whether minimizing hides the window to the notification area.
+    /// </summary>
+    public bool IsMinimizeToTray { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the web server with data.json runs.
     /// </summary>
     public bool IsWebServerEnabled { get; set; }
