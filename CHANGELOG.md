@@ -11,6 +11,7 @@
 
 ### Fixed
 
+- IPMI no longer fails when the board controller answers the SDR repository request with a completion code only. Reported in upstream issue 2599.
 - Intel CPU power is read on its own package, so systems with several CPUs no longer show hundreds of thousands of watts. Reported in upstream issue 2018.
 - After the computer wakes from sleep, the app opens the hardware again, so fans no longer stay at 0 RPM and full duty. Reported in upstream issue 2636.
 - The core VIDs of AMD Zen 4 and Zen 5 CPUs use the SVI3 encoding and no longer read far too low and inverse to the load. Reported in upstream issues 2084 and 1684.
