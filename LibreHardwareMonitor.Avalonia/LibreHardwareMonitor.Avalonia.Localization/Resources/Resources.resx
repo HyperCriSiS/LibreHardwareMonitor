@@ -250,6 +250,15 @@
   <data name="FamilyMemory" xml:space="preserve">
     <value>Memory</value>
   </data>
+  <data name="ExpandAll" xml:space="preserve">
+    <value>Expand all below</value>
+  </data>
+  <data name="CollapseAll" xml:space="preserve">
+    <value>Collapse all below</value>
+  </data>
+  <data name="ToggleAllHint" xml:space="preserve">
+    <value>Expand or collapse everything below</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Voltages</value>
   </data>

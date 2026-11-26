@@ -117,6 +117,45 @@ public sealed partial class MainWindow : DecoratedWindow
     }
 
     /// <summary>
+    /// Expands everything below the clicked node, or collapses it if it is fully expanded.
+    /// </summary>
+    /// <param name="sender">The button in the row.</param>
+    /// <param name="e">The click event.</param>
+    private void OnToggleAllClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: SensorTreeNodeViewModel node })
+        {
+            node.ToggleExpandedRecursive();
+        }
+    }
+
+    /// <summary>
+    /// Expands everything below the selected nodes.
+    /// </summary>
+    /// <param name="sender">The menu item.</param>
+    /// <param name="e">The click event.</param>
+    private void OnExpandAllClick(object sender, RoutedEventArgs e)
+    {
+        foreach (SensorTreeNodeViewModel node in _selectedNodes.ToList())
+        {
+            node.SetExpandedRecursive(true);
+        }
+    }
+
+    /// <summary>
+    /// Collapses everything below the selected nodes.
+    /// </summary>
+    /// <param name="sender">The menu item.</param>
+    /// <param name="e">The click event.</param>
+    private void OnCollapseAllClick(object sender, RoutedEventArgs e)
+    {
+        foreach (SensorTreeNodeViewModel node in _selectedNodes.ToList())
+        {
+            node.SetExpandedRecursive(false);
+        }
+    }
+
+    /// <summary>
     /// Sorts the sensors of one category by the clicked column.
     /// </summary>
     /// <param name="sender">The caption button.</param>
