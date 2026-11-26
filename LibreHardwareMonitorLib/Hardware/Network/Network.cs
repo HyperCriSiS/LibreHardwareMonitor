@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Security;
+using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using OperatingSystem = LibreHardwareMonitor.Software.OperatingSystem;
 
@@ -18,6 +19,8 @@ namespace LibreHardwareMonitor.Hardware.Network;
 internal sealed class Network : Hardware
 {
     private const string NetworkAdapterClassKey = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}";
+
+    private static readonly Regex FilterSuffix = new(@"-\d{4}$", RegexOptions.CultureInvariant);
 
     private readonly Sensor _dataDownloaded;
     private readonly Sensor _dataUploaded;
@@ -54,6 +57,27 @@ internal sealed class Network : Hardware
 
     internal NetworkInterface NetworkInterface { get; private set; }
 
+    /// <summary>
+    /// Classifies the adapter as "Physical" (PCI or USB device), "Filter" (a filter driver bound to another adapter,
+    /// which Windows also reports as an interface) or "Virtual" (everything else, for example Hyper-V, VPN or WAN miniports).
+    /// </summary>
+    private string GetConnection(IDictionary<string, string> properties)
+    {
+        properties.TryGetValue("Matching device ID", out string matchingDeviceId);
+
+        if (matchingDeviceId != null &&
+            (matchingDeviceId.StartsWith(@"PCI\", StringComparison.OrdinalIgnoreCase) || matchingDeviceId.StartsWith(@"USB\", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Physical";
+        }
+
+        // Filter interfaces have no adapter entry and are named "<adapter>-<filter>-0000".
+        if (matchingDeviceId == null && FilterSuffix.IsMatch(NetworkInterface.Description ?? string.Empty))
+            return "Filter";
+
+        return "Virtual";
+    }
+
     public override IDictionary<string, string> Properties
     {
         get
@@ -67,7 +91,10 @@ internal sealed class Network : Hardware
                 AddProperty("Interface type", NetworkInterface.NetworkInterfaceType.ToString());
 
             if (!OperatingSystem.IsUnix)
+            {
                 AddDriverProperties();
+                AddProperty("Connection", GetConnection(properties));
+            }
 
             return properties;
 
