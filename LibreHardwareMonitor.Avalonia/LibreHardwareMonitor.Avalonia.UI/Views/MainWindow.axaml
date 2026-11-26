@@ -51,6 +51,8 @@
                      Text="{Binding FilterText}"/>
             <ToggleButton Content="{x:Static language:Resources.ShowHiddenSensors}"
                           IsChecked="{Binding ShowHidden}"/>
+            <Button Content="{x:Static language:Resources.MappingOpen}"
+                    Click="OnMappingClick"/>
             <ToggleButton Content="{x:Static language:Resources.DetailsLabel}"
                           IsChecked="{Binding IsDetailsVisible}"/>
         </WrapPanel>

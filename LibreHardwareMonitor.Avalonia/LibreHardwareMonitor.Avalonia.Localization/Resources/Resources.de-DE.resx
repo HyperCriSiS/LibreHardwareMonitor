@@ -139,6 +139,60 @@
   <data name="ShowHiddenSensors" xml:space="preserve">
     <value>Ausgeblendete zeigen</value>
   </data>
+  <data name="MappingOpen" xml:space="preserve">
+    <value>Sensoren zuordnen</value>
+  </data>
+  <data name="MappingTitle" xml:space="preserve">
+    <value>Board-Sensoren zuordnen</value>
+  </data>
+  <data name="MappingIntroduction" xml:space="preserve">
+    <value>Misst die Board-Temperaturen 20 Sekunden im Leerlauf und danach 60 Sekunden mit voller Last auf allen CPU-Kernen. Aus der Reaktion schlägt der Assistent vor, was jeder Sensor misst. Schließe vorher andere fordernde Programme. Die Board-Sensoren lassen sich nur mit Administratorrechten lesen.</value>
+  </data>
+  <data name="MappingStart" xml:space="preserve">
+    <value>Starten</value>
+  </data>
+  <data name="MappingCancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="MappingIdle" xml:space="preserve">
+    <value>Messe im Leerlauf ...</value>
+  </data>
+  <data name="MappingLoad" xml:space="preserve">
+    <value>Messe unter voller CPU-Last ...</value>
+  </data>
+  <data name="MappingCanceled" xml:space="preserve">
+    <value>Abgebrochen. Die CPU-Last ist beendet.</value>
+  </data>
+  <data name="MappingDone" xml:space="preserve">
+    <value>Fertig. Das sind Vorschläge aus einer Messung, keine Gewissheiten.</value>
+  </data>
+  <data name="MappingNoSensors" xml:space="preserve">
+    <value>Keine Board-Temperaturen gefunden. Starte die Anwendung als Administrator.</value>
+  </data>
+  <data name="MappingNotConnected" xml:space="preserve">
+    <value>Vermutlich nicht angeschlossen: Die Werte sind unplausibel.</value>
+  </data>
+  <data name="MappingConstant" xml:space="preserve">
+    <value>Hat sich gar nicht verändert. Möglicherweise unbelegt oder ein fester Wert.</value>
+  </data>
+  <data name="MappingFollowsCpu" xml:space="preserve">
+    <value>Stieg fast wie die CPU: vermutlich CPU-Sockel oder ein CPU-Temperatureingang.</value>
+  </data>
+  <data name="MappingWarmsWithCpu" xml:space="preserve">
+    <value>Erwärmte sich deutlich mit der CPU-Last: vermutlich in der Nähe der Spannungswandler (VRM) oder des Sockels.</value>
+  </data>
+  <data name="MappingIndependentOfCpu" xml:space="preserve">
+    <value>Reagierte kaum auf CPU-Last: vermutlich Chipsatz, PCIe-Steckplatz, Board- oder Gehäuseluft oder ein externer Fühler.</value>
+  </data>
+  <data name="MappingUnknown" xml:space="preserve">
+    <value>Nicht beurteilbar, weil die CPU-Temperatur nicht genug gestiegen ist.</value>
+  </data>
+  <data name="MappingRiseFormat" xml:space="preserve">
+    <value>Anstieg unter Last: {0:F1} °C</value>
+  </data>
+  <data name="MappingSameValueFormat" xml:space="preserve">
+    <value>Zeigt denselben Wert wie {0}</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Spannungen</value>
   </data>

@@ -139,6 +139,60 @@
   <data name="ShowHiddenSensors" xml:space="preserve">
     <value>Show hidden</value>
   </data>
+  <data name="MappingOpen" xml:space="preserve">
+    <value>Map sensors</value>
+  </data>
+  <data name="MappingTitle" xml:space="preserve">
+    <value>Map motherboard sensors</value>
+  </data>
+  <data name="MappingIntroduction" xml:space="preserve">
+    <value>Measures the motherboard temperatures for 20 seconds at idle and then for 60 seconds with all CPU cores fully loaded. From the reaction it suggests what each sensor measures. Close other demanding programs first. Reading the motherboard sensors requires administrator rights.</value>
+  </data>
+  <data name="MappingStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="MappingCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="MappingIdle" xml:space="preserve">
+    <value>Measuring at idle...</value>
+  </data>
+  <data name="MappingLoad" xml:space="preserve">
+    <value>Measuring under full CPU load...</value>
+  </data>
+  <data name="MappingCanceled" xml:space="preserve">
+    <value>Canceled. The CPU load has been stopped.</value>
+  </data>
+  <data name="MappingDone" xml:space="preserve">
+    <value>Done. These are suggestions from one measurement, not certainties.</value>
+  </data>
+  <data name="MappingNoSensors" xml:space="preserve">
+    <value>No motherboard temperatures found. Start the application as administrator.</value>
+  </data>
+  <data name="MappingNotConnected" xml:space="preserve">
+    <value>Probably not connected: the readings are implausible.</value>
+  </data>
+  <data name="MappingConstant" xml:space="preserve">
+    <value>Did not change at all. Possibly unconnected or a fixed value.</value>
+  </data>
+  <data name="MappingFollowsCpu" xml:space="preserve">
+    <value>Rose almost like the CPU: probably the CPU socket or a CPU temperature input.</value>
+  </data>
+  <data name="MappingWarmsWithCpu" xml:space="preserve">
+    <value>Warmed up noticeably with CPU load: probably near the voltage regulators (VRM) or the socket.</value>
+  </data>
+  <data name="MappingIndependentOfCpu" xml:space="preserve">
+    <value>Barely reacted to CPU load: probably chipset, PCIe slot, board or case air, or an external probe.</value>
+  </data>
+  <data name="MappingUnknown" xml:space="preserve">
+    <value>Cannot be judged, because the CPU temperature did not rise enough.</value>
+  </data>
+  <data name="MappingRiseFormat" xml:space="preserve">
+    <value>Rise under load: {0:F1} °C</value>
+  </data>
+  <data name="MappingSameValueFormat" xml:space="preserve">
+    <value>Reads the same as {0}</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Voltages</value>
   </data>
