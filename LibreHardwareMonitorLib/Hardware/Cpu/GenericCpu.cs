@@ -314,6 +314,8 @@ public class GenericCpu : Hardware
             _cpuLoad.Update();
 
             float maxLoad = 0;
+            float loadSum = 0;
+            int loadCount = 0;
             if (_threadLoads != null)
             {
                 for (int i = 0; i < _threadLoads.Length; i++)
@@ -322,12 +324,15 @@ public class GenericCpu : Hardware
                     {
                         _threadLoads[i].Value = (float)_cpuLoad.GetThreadLoad(i);
                         maxLoad = Math.Max(maxLoad, _threadLoads[i].Value ?? 0);
+                        loadSum += _threadLoads[i].Value ?? 0;
+                        loadCount++;
                     }
                 }
             }
 
+            // The total covers only the threads of this CPU, because the load times include every CPU of the system.
             if (_totalLoad != null)
-                _totalLoad.Value = (float)_cpuLoad.GetTotalLoad();
+                _totalLoad.Value = loadCount > 0 ? (float)Math.Round(loadSum / loadCount, 2) : (float)_cpuLoad.GetTotalLoad();
 
             if (_maxLoad != null)
                 _maxLoad.Value = maxLoad;
