@@ -565,14 +565,15 @@ internal sealed class NvidiaGpu : GenericGpu
 
             if (pciIdentifierStatus == NvApi.NvStatus.OK && AstralSubSystemIds.Contains(subSystemId))
             {
+                // Index 0 belongs to the GPU core voltage.
                 _12VHPwrPinVoltageSensors =
                 [
-                    new Sensor("12VHPWR Pin 1", 0, SensorType.Voltage, this, settings),
-                    new Sensor("12VHPWR Pin 2", 1, SensorType.Voltage, this, settings),
-                    new Sensor("12VHPWR Pin 3", 2, SensorType.Voltage, this, settings),
-                    new Sensor("12VHPWR Pin 4", 3, SensorType.Voltage, this, settings),
-                    new Sensor("12VHPWR Pin 5", 4, SensorType.Voltage, this, settings),
-                    new Sensor("12VHPWR Pin 6", 5, SensorType.Voltage, this, settings),
+                    new Sensor("12VHPWR Pin 1", 1, SensorType.Voltage, this, settings),
+                    new Sensor("12VHPWR Pin 2", 2, SensorType.Voltage, this, settings),
+                    new Sensor("12VHPWR Pin 3", 3, SensorType.Voltage, this, settings),
+                    new Sensor("12VHPWR Pin 4", 4, SensorType.Voltage, this, settings),
+                    new Sensor("12VHPWR Pin 5", 5, SensorType.Voltage, this, settings),
+                    new Sensor("12VHPWR Pin 6", 6, SensorType.Voltage, this, settings),
                 ];
                 _12VHPwrPinCurrentSensors =
                 [
