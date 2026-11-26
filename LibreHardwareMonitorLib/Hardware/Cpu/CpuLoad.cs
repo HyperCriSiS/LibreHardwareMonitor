@@ -25,7 +25,6 @@ internal class CpuLoad
 
     public CpuLoad(CpuId[][] cpuid)
     {
-        _threadLoads = new double[cpuid.Sum(x => x.Length)];
         _totalLoad = 0;
 
         try
@@ -38,8 +37,28 @@ internal class CpuLoad
             _totalTimes = null;
         }
 
+        // The times cover every logical processor of the system, indexed by GetProcessorIndex.
+        _threadLoads = new double[_idleTimes?.Length ?? 0];
+
         if (_idleTimes != null)
             IsAvailable = true;
+    }
+
+    /// <summary>
+    /// Gets the index of a logical processor across all processor groups. Windows puts at most 64 logical processors into
+    /// a group and numbers them per group, so systems with more need the processors of the earlier groups added.
+    /// </summary>
+    /// <param name="group">The processor group.</param>
+    /// <param name="thread">The number of the logical processor within its group.</param>
+    /// <returns>The index of the logical processor in the system.</returns>
+    public static int GetProcessorIndex(int group, int thread)
+    {
+        int index = thread;
+
+        for (ushort i = 0; i < group && !Software.OperatingSystem.IsUnix; i++)
+            index += (int)Windows.Win32.PInvoke.GetActiveProcessorCount(i);
+
+        return index;
     }
 
     public bool IsAvailable { get; }
@@ -49,10 +68,41 @@ internal class CpuLoad
         return !Software.OperatingSystem.IsUnix ? GetWindowsTimes(out idle, out total) : GetUnixTimes(out idle, out total);
     }
 
-    private static unsafe bool GetWindowsTimes(out long[] idle, out long[] total)
+    private static bool GetWindowsTimes(out long[] idle, out long[] total)
+    {
+        ushort groupCount = Windows.Win32.PInvoke.GetActiveProcessorGroupCount();
+        if (groupCount <= 1)
+            return GetWindowsTimes(null, out idle, out total);
+
+        List<long> idleList = [];
+        List<long> totalList = [];
+
+        for (ushort group = 0; group < groupCount; group++)
+        {
+            if (!GetWindowsTimes(group, out long[] groupIdle, out long[] groupTotal))
+            {
+                idle = null;
+                total = null;
+                return false;
+            }
+
+            idleList.AddRange(groupIdle);
+            totalList.AddRange(groupTotal);
+        }
+
+        idle = idleList.ToArray();
+        total = totalList.ToArray();
+        return true;
+    }
+
+    /// <summary>
+    /// Reads the idle and total times of the logical processors of one processor group, or of the current group if null.
+    /// </summary>
+    private static unsafe bool GetWindowsTimes(ushort? group, out long[] idle, out long[] total)
     {
         idle = null;
         total = null;
+        ushort groupValue = group ?? 0;
 
         int size = sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * 64;
         uint returnSize = 0;
@@ -62,7 +112,9 @@ internal class CpuLoad
         while (true)
         {
             //Query processor performance information
-            NTSTATUS status = PInvoke.NtQuerySystemInformation(SYSTEM_INFORMATION_CLASS.SystemProcessorPerformanceInformation, (void*)handle, (uint)size, &returnSize);
+            NTSTATUS status = group.HasValue
+                ? NtQuerySystemInformationEx(SYSTEM_INFORMATION_CLASS.SystemProcessorPerformanceInformation, &groupValue, sizeof(ushort), (void*)handle, (uint)size, &returnSize)
+                : PInvoke.NtQuerySystemInformation(SYSTEM_INFORMATION_CLASS.SystemProcessorPerformanceInformation, (void*)handle, (uint)size, &returnSize);
             if (status == NTSTATUS.STATUS_INFO_LENGTH_MISMATCH)
             {
                 size = (int)returnSize;
@@ -161,8 +213,16 @@ internal class CpuLoad
 
     public double GetThreadLoad(int thread)
     {
-        return _threadLoads[thread];
+        return thread < _threadLoads.Length ? _threadLoads[thread] : 0;
     }
+
+    [DllImport("ntdll.dll")]
+    private static extern unsafe NTSTATUS NtQuerySystemInformationEx(SYSTEM_INFORMATION_CLASS systemInformationClass,
+        void* inputBuffer,
+        uint inputBufferLength,
+        void* systemInformation,
+        uint systemInformationLength,
+        uint* returnLength);
 
     public void Update()
     {
