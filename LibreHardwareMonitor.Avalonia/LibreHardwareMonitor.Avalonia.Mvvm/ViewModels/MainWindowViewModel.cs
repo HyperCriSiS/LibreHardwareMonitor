@@ -332,6 +332,29 @@ public sealed class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Renames a sensor by its library identifier, for example from the sensor mapping.
+    /// </summary>
+    /// <param name="identifier">The sensor identifier.</param>
+    /// <param name="name">The new name, or empty to restore the default name.</param>
+    public void RenameSensor(string identifier, string name)
+    {
+        RenameRequested?.Invoke(identifier, name ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Hides a sensor by its identifier, for example an unconnected input found by the sensor mapping.
+    /// </summary>
+    /// <param name="identifier">The sensor identifier.</param>
+    public void HideSensor(string identifier)
+    {
+        if (_hiddenSensors.Add(identifier))
+        {
+            UpdateTree();
+            SettingsChanged?.Invoke();
+        }
+    }
+
+    /// <summary>
     /// Hides or shows the given sensors, including all sensors below the given hardware and categories.
     /// </summary>
     /// <param name="nodes">The selected nodes.</param>

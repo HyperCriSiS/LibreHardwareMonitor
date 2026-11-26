@@ -205,6 +205,12 @@
   <data name="MappingCanceled" xml:space="preserve">
     <value>Canceled. The CPU load has been stopped.</value>
   </data>
+  <data name="MappingRename" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="MappingHide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
   <data name="MappingDone" xml:space="preserve">
     <value>Done. These are suggestions from one measurement, not certainties.</value>
   </data>

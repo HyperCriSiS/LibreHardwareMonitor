@@ -138,7 +138,8 @@ internal class Ipmi : ISuperIO
         if (_sdrs.Count == 0 || stringBuilder != null)
         {
             byte[] sdrInfo = RunIPMICommand(COMMAND_GET_SDR_REPOSITORY_INFO, NETWORK_FUNCTION_STORAGE, new byte[] { });
-            if (sdrInfo?[0] == 0)
+            // Some BMCs answer with only a completion code, which has no record count.
+            if (sdrInfo?.Length >= 4 && sdrInfo[0] == 0)
             {
                 int recordCount = (sdrInfo[3] * 256) + sdrInfo[2];
 
