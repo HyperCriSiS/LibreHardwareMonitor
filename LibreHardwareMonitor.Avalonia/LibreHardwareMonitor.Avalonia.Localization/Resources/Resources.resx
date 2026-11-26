@@ -121,6 +121,12 @@
   <data name="HistoryRangeFormat" xml:space="preserve">
     <value>Lowest {0}, highest {1}</value>
   </data>
+  <data name="UseFahrenheit" xml:space="preserve">
+    <value>Temperatures in °F</value>
+  </data>
+  <data name="ValueTemperatureFahrenheitFormat" xml:space="preserve">
+    <value>{0:F1} °F</value>
+  </data>
   <data name="ReportOpen" xml:space="preserve">
     <value>Create report…</value>
   </data>
