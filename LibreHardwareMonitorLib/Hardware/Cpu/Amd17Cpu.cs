@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using LibreHardwareMonitor.PawnIo;
@@ -65,6 +66,96 @@ internal sealed class Amd17Cpu : AmdCpu
         }
 
         Update();
+    }
+
+    /// <summary>
+    /// Adds the DRAM timings of the memory controller on Zen 2 (Matisse) and Zen 3 (Vermeer) desktop CPUs with DDR4.
+    /// The values are read from the UMC timing registers. Keys start with "RAM ", which user interfaces may treat as advanced.
+    /// </summary>
+    public override IDictionary<string, string> Properties
+    {
+        get
+        {
+            IDictionary<string, string> properties = base.Properties;
+
+            if (!((_family == 0x17 && _model == 0x71) || (_family == 0x19 && _model == 0x21)))
+                return properties;
+
+            try
+            {
+                AddMemoryTimings(properties);
+            }
+            catch (Exception)
+            {
+                // Timings are optional, for example without the PawnIO driver.
+            }
+
+            return properties;
+        }
+    }
+
+    private void AddMemoryTimings(IDictionary<string, string> properties)
+    {
+        // UMC channel 0 or, if it is not populated, channel 1.
+        uint channel = 0;
+        if (ReadUmc(channel, 0x204) is 0 or 0xFFFFFFFF)
+            channel = 0x100000;
+
+        uint config = ReadUmc(channel, 0x200);
+        uint timing1 = ReadUmc(channel, 0x204);
+        uint timing2 = ReadUmc(channel, 0x208);
+        uint timing3 = ReadUmc(channel, 0x20C);
+        uint timing4 = ReadUmc(channel, 0x210);
+        uint timing5 = ReadUmc(channel, 0x214);
+        uint timing6 = ReadUmc(channel, 0x218);
+
+        uint cl = timing1 & 0x3F;
+        uint ras = (timing1 >> 8) & 0x7F;
+        uint rcdRead = (timing1 >> 16) & 0x3F;
+        uint rcdWrite = (timing1 >> 24) & 0x3F;
+        uint rc = timing2 & 0xFF;
+        uint rp = (timing2 >> 16) & 0x3F;
+
+        // Reject values that cannot be DDR4 timings, so a different register layout shows nothing instead of nonsense.
+        if (cl is < 8 or > 40 || rp is < 8 or > 40 || ras < 16 || rc < ras)
+            return;
+
+        double speed = (config & 0x7F) / 3.0 * 200;
+        if (speed is >= 1600 and <= 6000)
+            properties["RAM speed"] = string.Format(CultureInfo.InvariantCulture, "DDR4-{0:0}", speed);
+
+        properties["RAM tCL"] = cl.ToString(CultureInfo.InvariantCulture);
+        properties["RAM tRCD read"] = rcdRead.ToString(CultureInfo.InvariantCulture);
+        properties["RAM tRCD write"] = rcdWrite.ToString(CultureInfo.InvariantCulture);
+        properties["RAM tRP"] = rp.ToString(CultureInfo.InvariantCulture);
+        properties["RAM tRAS"] = ras.ToString(CultureInfo.InvariantCulture);
+        properties["RAM tRC"] = rc.ToString(CultureInfo.InvariantCulture);
+        properties["RAM tRRD S"] = (timing3 & 0x1F).ToString(CultureInfo.InvariantCulture);
+        properties["RAM tRRD L"] = ((timing3 >> 8) & 0x1F).ToString(CultureInfo.InvariantCulture);
+        properties["RAM tRTP"] = ((timing3 >> 24) & 0x1F).ToString(CultureInfo.InvariantCulture);
+        properties["RAM tFAW"] = (timing4 & 0x7F).ToString(CultureInfo.InvariantCulture);
+        properties["RAM tCWL"] = (timing5 & 0x3F).ToString(CultureInfo.InvariantCulture);
+        properties["RAM tWTR S"] = ((timing5 >> 8) & 0x1F).ToString(CultureInfo.InvariantCulture);
+        properties["RAM tWTR L"] = ((timing5 >> 16) & 0x7F).ToString(CultureInfo.InvariantCulture);
+        properties["RAM tWR"] = (timing6 & 0x7F).ToString(CultureInfo.InvariantCulture);
+        properties["RAM command rate"] = ((config >> 10) & 1) == 1 ? "2T" : "1T";
+        properties["RAM gear down"] = ((config >> 11) & 1) == 1 ? "On" : "Off";
+
+        // tRFC has one register per refresh mode. The one that differs from the reset value is in use.
+        foreach (uint offset in new uint[] { 0x260, 0x264, 0x268, 0x26C })
+        {
+            uint rfcRegister = ReadUmc(channel, offset);
+            if (rfcRegister != 0 && rfcRegister != 0x21060138)
+            {
+                uint rfc = rfcRegister & 0x7FF;
+                if (rfc is > 50 and < 2000)
+                    properties["RAM tRFC"] = rfc.ToString(CultureInfo.InvariantCulture);
+
+                break;
+            }
+        }
+
+        uint ReadUmc(uint channelOffset, uint register) => _pawnModule.ReadSmn(0x50000 + channelOffset + register);
     }
 
     public override string GetReport()

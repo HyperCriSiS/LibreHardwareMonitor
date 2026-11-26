@@ -284,7 +284,7 @@ public sealed class MainWindowViewModel : ObservableObject
     /// <summary>
     /// Property name prefixes of details that are shown only with the advanced values.
     /// </summary>
-    private static readonly string[] AdvancedPropertyPrefixes = ["SMART ", "PCIe ", "Throttle ", "Advanced "];
+    private static readonly string[] AdvancedPropertyPrefixes = ["SMART ", "PCIe ", "Throttle ", "Advanced ", "RAM "];
 
     /// <summary>
     /// Gets or sets whether hidden sensors are shown.
