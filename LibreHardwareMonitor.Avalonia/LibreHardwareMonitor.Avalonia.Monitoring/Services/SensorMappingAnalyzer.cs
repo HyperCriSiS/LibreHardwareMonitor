@@ -37,6 +37,9 @@ public static class SensorMappingAnalyzer
             CollectTemperatures(root, null, null, temperatures);
         }
 
+        // Some hardware reports two sensors with the same identifier, so only the first one is used.
+        temperatures = temperatures.DistinctBy(t => t.Sensor.Identifier).ToList();
+
         Dictionary<string, float?[]> series = temperatures.ToDictionary(t => t.Sensor.Identifier,
             t => all.Select(snapshot => FindValue(snapshot, t.Sensor.Identifier)).ToArray());
 

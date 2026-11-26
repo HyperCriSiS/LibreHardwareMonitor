@@ -26,6 +26,8 @@ internal sealed class AmdGpu : GenericGpu
     private readonly Sensor _coreVoltage;
     private readonly int _currentOverdriveApiLevel;
     private readonly string _d3dDeviceId;
+    private bool _temperatureFromD3D;
+    private bool _temperatureFromAdlSeen;
     private readonly uint _device;
     private readonly Sensor _fan;
     private readonly Control _fanControl;
@@ -312,6 +314,13 @@ internal sealed class AmdGpu : GenericGpu
 
     public override void Update()
     {
+        // Do not keep a stale WDDM fallback value if the next query fails, or let it
+        // hide a newly available ADL reading.
+        if (_temperatureFromD3D)
+        {
+            _temperatureCore.Value = null;
+            _temperatureFromD3D = false;
+        }
         if (_d3dDeviceId != null && D3DDisplayDevice.GetDeviceInfoByIdentifier(_d3dDeviceId, out D3DDisplayDevice.D3DDeviceInfo deviceInfo))
         {
             _gpuDedicatedMemoryTotal.Value = 1f * deviceInfo.GpuVideoMemoryLimit;
@@ -438,6 +447,18 @@ internal sealed class AmdGpu : GenericGpu
 
             GetAdlSensor(adlPMLogData, logDataOutput, AtiAdlxx.ADLPMLogSensors.ADL_PMLOG_GFX_POWER, _powerCore, reset: false);
             GetAdlSensor(adlPMLogData, logDataOutput, AtiAdlxx.ADLPMLogSensors.ADL_PMLOG_SOC_POWER, _powerSoC, reset: false);
+        }
+
+        // Some OEM AMD drivers expose temperature through WDDM but not ADL.
+        // Match the existing D3D device rather than using the first display adapter.
+        // Once ADL has delivered a temperature, an occasional failed read must not switch to the WDDM sensor, which can measure another spot.
+        _temperatureFromAdlSeen |= _temperatureCore.Value.HasValue;
+
+        if (!_temperatureFromAdlSeen && D3DDisplayDevice.TryGetTemperature(_d3dDeviceId, out float temperature))
+        {
+            _temperatureCore.Value = temperature;
+            _temperatureFromD3D = true;
+            ActivateSensor(_temperatureCore);
         }
     }
 
