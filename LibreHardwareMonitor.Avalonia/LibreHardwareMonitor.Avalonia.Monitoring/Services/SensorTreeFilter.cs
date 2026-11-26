@@ -17,19 +17,21 @@ public static class SensorTreeFilter
     /// <param name="sortOrder">The order of the sensors within their parent.</param>
     /// <param name="hiddenSensors">The identifiers of sensors to leave out, or null to keep all sensors.</param>
     /// <param name="groupSortOrders">Orders that replace <paramref name="sortOrder" /> below specific nodes, keyed by node identifier.</param>
+    /// <param name="includeAdvanced">Whether sensors that are hidden by default are kept.</param>
     /// <returns>The filtered and sorted root nodes.</returns>
     public static IReadOnlyList<SensorTreeNodeSnapshot> Apply(IReadOnlyList<SensorTreeNodeSnapshot> roots,
         string text,
         SensorSortOrder sortOrder,
         IReadOnlySet<string> hiddenSensors = null,
-        IReadOnlyDictionary<string, SensorSortOrder> groupSortOrders = null)
+        IReadOnlyDictionary<string, SensorSortOrder> groupSortOrders = null,
+        bool includeAdvanced = true)
     {
-        if (string.IsNullOrWhiteSpace(text) && sortOrder == SensorSortOrder.Default && !(hiddenSensors?.Count > 0) && !(groupSortOrders?.Count > 0))
+        if (string.IsNullOrWhiteSpace(text) && sortOrder == SensorSortOrder.Default && !(hiddenSensors?.Count > 0) && !(groupSortOrders?.Count > 0) && includeAdvanced)
         {
             return roots;
         }
 
-        return roots.Select(root => Apply(root, text?.Trim(), false, sortOrder, hiddenSensors, groupSortOrders)).ToList();
+        return roots.Select(root => Apply(root, text?.Trim(), false, sortOrder, hiddenSensors, groupSortOrders, includeAdvanced)).ToList();
     }
 
     /// <summary>
@@ -41,13 +43,15 @@ public static class SensorTreeFilter
     /// <param name="sortOrder">The order of the sensors within their parent.</param>
     /// <param name="hiddenSensors">The identifiers of sensors to leave out, or null to keep all sensors.</param>
     /// <param name="groupSortOrders">Orders that replace <paramref name="sortOrder" /> below specific nodes.</param>
+    /// <param name="includeAdvanced">Whether sensors that are hidden by default are kept.</param>
     /// <returns>The processed node, or null if neither it nor its children match.</returns>
     private static SensorTreeNodeSnapshot Apply(SensorTreeNodeSnapshot node,
         string text,
         bool isMatched,
         SensorSortOrder sortOrder,
         IReadOnlySet<string> hiddenSensors,
-        IReadOnlyDictionary<string, SensorSortOrder> groupSortOrders)
+        IReadOnlyDictionary<string, SensorSortOrder> groupSortOrders,
+        bool includeAdvanced)
     {
         if (groupSortOrders != null && groupSortOrders.TryGetValue(node.Identifier, out SensorSortOrder groupSortOrder))
         {
@@ -62,11 +66,11 @@ public static class SensorTreeFilter
 
         if (node.Kind == SensorTreeNodeKind.Sensor)
         {
-            return isMatched && hiddenSensors?.Contains(node.Identifier) != true ? node : null;
+            return isMatched && hiddenSensors?.Contains(node.Identifier) != true && (includeAdvanced || !node.IsAdvanced) ? node : null;
         }
 
         IEnumerable<SensorTreeNodeSnapshot> children = node.Children
-                                                           .Select(child => Apply(child, text, isMatched, sortOrder, hiddenSensors, groupSortOrders))
+                                                           .Select(child => Apply(child, text, isMatched, sortOrder, hiddenSensors, groupSortOrders, includeAdvanced))
                                                            .Where(child => child != null);
 
         children = sortOrder switch

@@ -17,7 +17,7 @@
                     Title="{x:Static language:Resources.ApplicationTitle}"
                     Icon="{StaticResource LibreHardwareMonitorWindowIcon}"
                     TitleBarIcon="{StaticResource LibreHardwareMonitorTitleBarIcon}"
-                    Width="1024" Height="720"
+                    Width="1120" Height="720"
                     MinWidth="600" MinHeight="400"
                     WindowStartupLocation="CenterScreen">
 
@@ -49,6 +49,8 @@
                      AutomationProperties.Name="{x:Static language:Resources.FilterPlaceholder}"
                      PlaceholderText="{x:Static language:Resources.FilterPlaceholder}"
                      Text="{Binding FilterText}"/>
+            <ToggleButton Content="{x:Static language:Resources.ShowAdvanced}"
+                          IsChecked="{Binding ShowAdvanced}"/>
             <ToggleButton Content="{x:Static language:Resources.ShowHiddenSensors}"
                           IsChecked="{Binding ShowHidden}"/>
             <Button Content="{x:Static language:Resources.MappingOpen}"
@@ -270,6 +272,10 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:DetailViewModel">
                             <StackPanel Margin="0,0,0,8">
+                                <TextBlock Margin="0,8,0,4"
+                                           FontWeight="SemiBold"
+                                           IsVisible="{Binding IsFirstAdvanced}"
+                                           Text="{x:Static language:Resources.DetailsAdvanced}"/>
                                 <TextBlock Opacity="0.7"
                                            Text="{Binding Name}"/>
                                 <SelectableTextBlock Text="{Binding Value}"

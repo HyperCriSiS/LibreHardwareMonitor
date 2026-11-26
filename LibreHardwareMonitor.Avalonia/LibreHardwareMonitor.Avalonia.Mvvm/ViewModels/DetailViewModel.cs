@@ -7,4 +7,5 @@ namespace LibreHardwareMonitor.Avalonia.Mvvm.ViewModels;
 /// </summary>
 /// <param name="Name">The name of the detail.</param>
 /// <param name="Value">The displayed value.</param>
-public sealed record DetailViewModel(string Name, string Value);
+/// <param name="IsFirstAdvanced">Whether this is the first advanced detail, which starts the advanced section.</param>
+public sealed record DetailViewModel(string Name, string Value, bool IsFirstAdvanced = false);

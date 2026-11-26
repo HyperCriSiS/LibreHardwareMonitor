@@ -55,7 +55,12 @@ public sealed class SensorMonitor : IDisposable
     /// <summary>
     /// Keeps properties, because reading them can access the device.
     /// </summary>
-    private readonly ConditionalWeakTable<IHardware, IReadOnlyDictionary<string, string>> _properties = new();
+    private readonly ConditionalWeakTable<IHardware, CachedProperties> _properties = new();
+
+    /// <summary>
+    /// How long properties are kept before they are read again, because some of them change slowly, for example SMART values.
+    /// </summary>
+    private static readonly TimeSpan PropertiesLifetime = TimeSpan.FromMinutes(1);
 
     /// <summary>
     /// Keeps the running averages of the sensors.
@@ -235,7 +240,6 @@ public sealed class SensorMonitor : IDisposable
         List<SensorTreeNodeSnapshot> children = new();
 
         foreach (IGrouping<SensorType, ISensor> group in hardware.Sensors
-                     .Where(sensor => !sensor.IsDefaultHidden)
                      .OrderBy(sensor => sensor.SensorType)
                      .ThenBy(sensor => sensor.Index)
                      .GroupBy(sensor => sensor.SensorType))
@@ -254,7 +258,8 @@ public sealed class SensorMonitor : IDisposable
                     sensor.Max,
                     Array.Empty<SensorTreeNodeSnapshot>(),
                     null,
-                    _averages.GetOrCreateValue(sensor).Add(sensor.Value)));
+                    _averages.GetOrCreateValue(sensor).Add(sensor.Value),
+                    sensor.IsDefaultHidden));
             }
 
             children.Add(new SensorTreeNodeSnapshot(hardware.Identifier + "/" + group.Key,
@@ -282,7 +287,7 @@ public sealed class SensorMonitor : IDisposable
             null,
             null,
             children,
-            _properties.GetValue(hardware, ReadProperties));
+            GetProperties(hardware));
     }
 
     /// <summary>
@@ -309,6 +314,31 @@ public sealed class SensorMonitor : IDisposable
             return _count > 0 ? (float)(_sum / _count) : null;
         }
     }
+
+    /// <summary>
+    /// Gets the properties of a hardware device, reading them again after <see cref="PropertiesLifetime" />.
+    /// </summary>
+    /// <param name="hardware">The hardware device.</param>
+    /// <returns>The properties.</returns>
+    private IReadOnlyDictionary<string, string> GetProperties(IHardware hardware)
+    {
+        DateTime now = DateTime.UtcNow;
+
+        if (!_properties.TryGetValue(hardware, out CachedProperties cached) || now - cached.Read > PropertiesLifetime)
+        {
+            cached = new CachedProperties(now, ReadProperties(hardware));
+            _properties.AddOrUpdate(hardware, cached);
+        }
+
+        return cached.Values;
+    }
+
+    /// <summary>
+    /// Holds properties with the time they were read.
+    /// </summary>
+    /// <param name="Read">The time the properties were read.</param>
+    /// <param name="Values">The properties.</param>
+    private sealed record CachedProperties(DateTime Read, IReadOnlyDictionary<string, string> Values);
 
     /// <summary>
     /// Reads the static properties of a hardware device.

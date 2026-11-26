@@ -23,6 +23,7 @@ public sealed class SensorTreeNodeSnapshot
     /// <param name="children">The child nodes.</param>
     /// <param name="properties">The static hardware properties, if applicable.</param>
     /// <param name="average">The average sensor value since monitoring started, if applicable.</param>
+    /// <param name="isAdvanced">Whether the sensor is hidden by default and shown only with the advanced values.</param>
     public SensorTreeNodeSnapshot(string identifier,
         string name,
         SensorTreeNodeKind kind,
@@ -33,7 +34,8 @@ public sealed class SensorTreeNodeSnapshot
         float? max,
         IReadOnlyList<SensorTreeNodeSnapshot> children,
         IReadOnlyDictionary<string, string> properties = null,
-        float? average = null)
+        float? average = null,
+        bool isAdvanced = false)
     {
         Identifier = identifier;
         Name = name;
@@ -46,6 +48,7 @@ public sealed class SensorTreeNodeSnapshot
         Children = children;
         Properties = properties;
         Average = average;
+        IsAdvanced = isAdvanced;
     }
 
     /// <summary>
@@ -92,6 +95,11 @@ public sealed class SensorTreeNodeSnapshot
     /// Gets the average sensor value since monitoring started.
     /// </summary>
     public float? Average { get; }
+
+    /// <summary>
+    /// Gets whether the sensor is hidden by default and shown only with the advanced values.
+    /// </summary>
+    public bool IsAdvanced { get; }
 
     /// <summary>
     /// Gets the child nodes.

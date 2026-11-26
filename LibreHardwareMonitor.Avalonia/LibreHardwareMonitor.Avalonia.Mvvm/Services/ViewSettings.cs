@@ -27,6 +27,11 @@ public sealed class ViewSettings
     public bool ShowHidden { get; set; }
 
     /// <summary>
+    /// Gets or sets whether advanced values are shown.
+    /// </summary>
+    public bool ShowAdvanced { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the details pane is visible.
     /// </summary>
     public bool IsDetailsVisible { get; set; }

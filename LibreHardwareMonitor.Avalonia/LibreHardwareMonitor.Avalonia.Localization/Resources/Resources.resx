@@ -262,6 +262,12 @@
   <data name="GroupMultipliers" xml:space="preserve">
     <value>Multipliers</value>
   </data>
+  <data name="ShowAdvanced" xml:space="preserve">
+    <value>Advanced values</value>
+  </data>
+  <data name="DetailsAdvanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Voltages</value>
   </data>
