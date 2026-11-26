@@ -169,6 +169,11 @@ public sealed class SensorMonitor : IDisposable
     {
         while (_renames.TryDequeue(out (string Identifier, string Name) rename))
         {
+            // Confirming the name from a board file unchanged in the rename dialog is not a choice of the user, so it
+            // keeps following the board file.
+            if (_boardDefinitions.TryGetValue(rename.Identifier, out (string Name, bool Hidden) definition) && rename.Name == definition.Name)
+                rename = (rename.Identifier, string.Empty);
+
             foreach (IHardware hardware in _computer.Hardware)
             {
                 Rename(hardware, rename.Identifier, rename.Name);

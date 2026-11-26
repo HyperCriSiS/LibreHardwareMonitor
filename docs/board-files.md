@@ -20,9 +20,9 @@ Put one or more `.json` files into `Documents\LibreHardwareMonitor\Boards`. The 
 
 - `board` must match the motherboard's SMBIOS product name exactly (case does not matter). The details pane shows it for the motherboard.
 - The keys under `sensors` are sensor identifiers. The details pane shows the identifier of the selected sensor.
-- `name` sets the name of the sensor (at most 64 characters). A name you set yourself with Rename always wins.
+- `name` sets the name of the sensor (at most 64 characters). A name you set yourself with Rename always wins. This also holds for names stored by earlier versions of the app, even if you reset them to the default then; rename the sensor and clear the field once to let the board file name it again.
 - `hidden` moves the sensor to the advanced values, which are shown only with "Advanced values".
-- Comments and trailing commas are allowed. Several files may describe the same board; files later in alphabetical order win. A file that cannot be read is skipped.
+- Comments and trailing commas are allowed. Several files may describe the same board; files later in alphabetical order win. A file that cannot be read, or that is larger than 1 MB, is skipped.
 
 ## What board files cannot do
 

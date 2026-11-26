@@ -25,9 +25,14 @@ namespace LibreHardwareMonitor.Avalonia.Monitoring.Services;
 public static class BoardDefinitions
 {
     /// <summary>
-    /// The longest name a file may set.
+    /// The longest name a file may set, in UTF-16 code units.
     /// </summary>
     public const int MaxNameLength = 64;
+
+    /// <summary>
+    /// The largest file that is read; board files are a few kilobytes.
+    /// </summary>
+    public const long MaxFileSize = 1024 * 1024;
 
     /// <summary>
     /// Loads the definitions for a board from all JSON files in a folder.
@@ -42,15 +47,29 @@ public static class BoardDefinitions
         if (string.IsNullOrWhiteSpace(boardName) || !Directory.Exists(directory))
             return result;
 
-        foreach (string file in Directory.GetFiles(directory, "*.json").Order(StringComparer.OrdinalIgnoreCase))
+        string[] files;
+
+        try
+        {
+            files = Directory.GetFiles(directory, "*.json");
+        }
+        catch (Exception)
+        {
+            // A folder that cannot be listed must not stop monitoring.
+            return result;
+        }
+
+        foreach (string file in files.Order(StringComparer.OrdinalIgnoreCase))
         {
             try
             {
-                Read(File.ReadAllText(file), boardName.Trim(), result);
+                if (new FileInfo(file).Length <= MaxFileSize)
+                    Read(File.ReadAllText(file), boardName.Trim(), result);
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+            catch (Exception)
             {
-                // A broken or locked file must not stop monitoring; the other files still apply.
+                // A broken, locked or malformed file (for example with an invalid character) must not stop monitoring;
+                // the other files still apply.
             }
         }
 
@@ -98,11 +117,19 @@ public static class BoardDefinitions
     /// </summary>
     private static string Clean(string name)
     {
-        string cleaned = new string((name ?? string.Empty).Where(character => !char.IsControl(character)).ToArray()).Trim();
+        // Format characters such as right-to-left overrides could make a name display differently from its text.
+        string cleaned = new string((name ?? string.Empty).Where(character => !char.IsControl(character) &&
+                                                                               char.GetUnicodeCategory(character) != System.Globalization.UnicodeCategory.Format)
+                                                           .ToArray()).Trim();
 
         if (cleaned.Length == 0)
             return null;
 
-        return cleaned.Length <= MaxNameLength ? cleaned : cleaned.Substring(0, MaxNameLength);
+        if (cleaned.Length <= MaxNameLength)
+            return cleaned;
+
+        // Do not cut a surrogate pair in half.
+        int length = char.IsHighSurrogate(cleaned[MaxNameLength - 1]) ? MaxNameLength - 1 : MaxNameLength;
+        return cleaned.Substring(0, length);
     }
 }
