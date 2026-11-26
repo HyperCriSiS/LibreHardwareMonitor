@@ -1061,7 +1061,9 @@ internal class Nct677X : ISuperIO
                 }
                 else
                 {
-                    Fans[i] = (high << 8) | low;
+                    // 0xFFFF means the chip has no reading yet, for example before its monitoring is initialized.
+                    int value = (high << 8) | low;
+                    Fans[i] = value == 0xFFFF ? null : value;
                 }
             }
         }

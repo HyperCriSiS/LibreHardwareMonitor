@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- Nuvoton NCT6683D, NCT6686D and NCT6687D fans show no value instead of 65535 RPM while the chip has no reading. Reported in upstream issue 2640.
+- NVIDIA GPU fans show no value instead of impossible speeds above 20000 RPM. Reported in upstream issue 1006.
+
 ### Adopted from upstream
 
 Changes taken from open pull requests of the original LibreHardwareMonitor project. Credit goes to their authors.

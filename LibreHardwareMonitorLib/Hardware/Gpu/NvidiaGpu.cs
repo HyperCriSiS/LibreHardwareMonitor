@@ -17,6 +17,11 @@ namespace LibreHardwareMonitor.Hardware.Gpu;
 
 internal sealed class NvidiaGpu : GenericGpu
 {
+    /// <summary>
+    /// Fan speeds above this are invalid readings that some cards return.
+    /// </summary>
+    private const int MaxFanRpm = 20000;
+
     private readonly int _adapterIndex;
     private readonly bool _isBlackwell;
     private readonly bool _busIdKnown;
@@ -740,14 +745,14 @@ internal sealed class NvidiaGpu : GenericGpu
                     for (int i = 0; i < fanCoolers.Count; i++)
                     {
                         NvApi.NvFanCoolersStatusItem item = fanCoolers.Items[i];
-                        _fans[i].Value = item.CurrentRpm;
+                        _fans[i].Value = item.CurrentRpm <= MaxFanRpm ? item.CurrentRpm : null;
                     }
                 }
                 else
                 {
                     int tachReading = GetTachReading(out status);
                     if (status == NvApi.NvStatus.OK)
-                        _fans[0].Value = tachReading;
+                        _fans[0].Value = tachReading <= MaxFanRpm ? tachReading : null;
                 }
             }
 
