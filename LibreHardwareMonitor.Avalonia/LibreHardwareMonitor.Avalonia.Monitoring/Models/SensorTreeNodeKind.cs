@@ -23,6 +23,11 @@ public enum SensorTreeNodeKind
     Category,
 
     /// <summary>
+    /// Groups several hardware devices of the same family, for example network adapters by connection.
+    /// </summary>
+    Group,
+
+    /// <summary>
     /// An individual sensor reading.
     /// </summary>
     Sensor
