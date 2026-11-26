@@ -4,6 +4,9 @@
 // Partial Copyright (C) Michael Möller <mmoeller@openhardwaremonitor.org> and Contributors.
 // All Rights Reserved.
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using LibreHardwareMonitor.Hardware.Memory.Sensors;
 using RAMSPDToolkit.SPD;
 using RAMSPDToolkit.SPD.Interfaces;
@@ -13,11 +16,15 @@ namespace LibreHardwareMonitor.Hardware.Memory;
 
 internal sealed class DimmMemory : Hardware
 {
+    private readonly SortedDictionary<string, string> _properties = new();
     private readonly SpdThermalSensor _thermalSensor;
 
     public DimmMemory(SPDAccessor accessor, string name, Identifier identifier, ISettings settings)
         : base(name, identifier, settings)
     {
+        // Read once, because reading the SPD can change its page.
+        ReadProperties(accessor);
+
         //Only add thermal sensor if present
         if (accessor is IThermalSensor ts && ts.HasThermalSensor)
         {
@@ -51,6 +58,35 @@ internal sealed class DimmMemory : Hardware
     }
 
     public override HardwareType HardwareType => HardwareType.Memory;
+
+    public override IDictionary<string, string> Properties => new SortedDictionary<string, string>(_properties);
+
+    private void ReadProperties(SPDAccessor accessor)
+    {
+        try
+        {
+            AddProperty("Memory type", accessor.MemoryType().ToString().Replace("SPD_", string.Empty).Replace("_", " "));
+            AddProperty("Module manufacturer", accessor.GetModuleManufacturerString());
+            AddProperty("DRAM manufacturer", accessor.GetDRAMManufacturerString());
+            AddProperty("Part number", accessor.ModulePartNumber()?.Trim());
+
+            float capacity = accessor.GetCapacity();
+            if (capacity > 0)
+                AddProperty("Capacity", capacity.ToString("0.##", CultureInfo.InvariantCulture) + " GB");
+
+            AddProperty("Manufacturing date", accessor.ModuleManufacturingDate()?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        }
+        catch (Exception)
+        {
+            // The properties are optional.
+        }
+
+        void AddProperty(string name, string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                _properties[name] = value;
+        }
+    }
 
     public override void Update()
     {
