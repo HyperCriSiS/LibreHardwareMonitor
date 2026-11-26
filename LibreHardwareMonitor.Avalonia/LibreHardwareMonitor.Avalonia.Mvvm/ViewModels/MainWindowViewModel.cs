@@ -29,6 +29,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private string _filterText = string.Empty;
     private readonly HashSet<string> _hiddenSensors = new();
     private bool _showHidden;
+    private bool _showAdvanced;
     private readonly Dictionary<string, SensorSortOrder> _groupSortOrders = new();
     private SensorSortOption _selectedSortOrder;
     private string _status = LanguageResources.StatusSearching;
@@ -115,6 +116,7 @@ public sealed class MainWindowViewModel : ObservableObject
         SelectedGrouping = Groupings.FirstOrDefault(option => option.Grouping == settings.Grouping) ?? Groupings[0];
         SelectedSortOrder = SortOrders.FirstOrDefault(option => option.SortOrder == settings.SortOrder) ?? SortOrders[0];
         ShowHidden = settings.ShowHidden;
+        ShowAdvanced = settings.ShowAdvanced;
         IsDetailsVisible = settings.IsDetailsVisible;
         UpdateTree();
     }
@@ -130,6 +132,7 @@ public sealed class MainWindowViewModel : ObservableObject
             Grouping = SelectedGrouping.Grouping,
             SortOrder = SelectedSortOrder.SortOrder,
             ShowHidden = ShowHidden,
+            ShowAdvanced = ShowAdvanced,
             IsDetailsVisible = IsDetailsVisible,
             HiddenSensors = _hiddenSensors.Order(StringComparer.Ordinal).ToList()
         };
@@ -261,6 +264,27 @@ public sealed class MainWindowViewModel : ObservableObject
             }
         }
     }
+
+    /// <summary>
+    /// Gets or sets whether advanced values are shown: sensors that are hidden by default and advanced details.
+    /// </summary>
+    public bool ShowAdvanced
+    {
+        get { return _showAdvanced; }
+        set
+        {
+            if (SetProperty(ref _showAdvanced, value))
+            {
+                UpdateTree();
+                SettingsChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Property name prefixes of details that are shown only with the advanced values.
+    /// </summary>
+    private static readonly string[] AdvancedPropertyPrefixes = ["SMART ", "PCIe ", "Throttle ", "Advanced "];
 
     /// <summary>
     /// Gets or sets whether hidden sensors are shown.
@@ -419,7 +443,7 @@ public sealed class MainWindowViewModel : ObservableObject
         {
             IReadOnlyList<SensorTreeNodeSnapshot> roots = SensorTreeGrouping.GetRoots(_snapshot, SelectedGrouping.Grouping);
 
-            SensorTreeReconciler.Reconcile(Hardware, SensorTreeFilter.Apply(roots, FilterText, SelectedSortOrder.SortOrder, ShowHidden ? null : _hiddenSensors, _groupSortOrders));
+            SensorTreeReconciler.Reconcile(Hardware, SensorTreeFilter.Apply(roots, FilterText, SelectedSortOrder.SortOrder, ShowHidden ? null : _hiddenSensors, _groupSortOrders, ShowAdvanced));
             MarkHidden(Hardware);
             SetCaptions(Hardware);
             UpdateDetails();
@@ -480,7 +504,7 @@ public sealed class MainWindowViewModel : ObservableObject
     /// </summary>
     /// <param name="details">The list to fill.</param>
     /// <param name="node">The node to describe.</param>
-    private static void AddDetails(List<DetailViewModel> details, SensorTreeNodeSnapshot node)
+    private void AddDetails(List<DetailViewModel> details, SensorTreeNodeSnapshot node)
     {
         switch (node.Kind)
         {
@@ -496,7 +520,14 @@ public sealed class MainWindowViewModel : ObservableObject
 
         if (node.Properties != null)
         {
-            details.AddRange(node.Properties.Select(property => new DetailViewModel(property.Key, property.Value)));
+            bool IsAdvanced(KeyValuePair<string, string> property) => AdvancedPropertyPrefixes.Any(prefix => property.Key.StartsWith(prefix, StringComparison.Ordinal));
+
+            details.AddRange(node.Properties.Where(property => !IsAdvanced(property)).Select(property => new DetailViewModel(property.Key, property.Value)));
+
+            if (ShowAdvanced)
+            {
+                details.AddRange(node.Properties.Where(IsAdvanced).Select((property, index) => new DetailViewModel(property.Key, property.Value, index == 0)));
+            }
         }
     }
 }

@@ -64,6 +64,11 @@ public sealed class StorageDevice : Hardware, ISmart
 
     public StorageDeviceDIT Storage => _storage;
 
+    private static string FormatTerabytes(double bytes)
+    {
+        return string.Format(CultureInfo.InvariantCulture, "{0:0.00} TB", bytes / 1e12);
+    }
+
     /// <summary>
     /// Classifies the drive as "SSD", "HDD", "Removable" or "Virtual". Drives report no rotation rate here, so SSDs are
     /// recognized by NVMe, by flash wear attributes or by their name.
@@ -104,6 +109,29 @@ public sealed class StorageDevice : Hardware, ISmart
             AddProperty("Controller", _storage.Controller?.DeviceName);
             AddProperty("Controller vendor", _storage.Controller?.VendorName);
             AddProperty("Drive type", GetDriveType());
+
+            if (_storage.Health is { } health)
+                AddProperty("Health", string.Format(CultureInfo.InvariantCulture, "{0} %", health));
+
+            AddProperty("Health status", _storage.HealthStatus?.ToString());
+
+            if (_storage.HostWrites is { } hostWrites)
+                AddProperty("Host writes", FormatTerabytes(hostWrites));
+
+            if (_storage.HostReads is { } hostReads)
+                AddProperty("Host reads", FormatTerabytes(hostReads));
+
+            // The full SMART table, which user interfaces may show as advanced values.
+            foreach (SmartAttribute attribute in _attributes)
+            {
+                AddProperty(string.Format(CultureInfo.InvariantCulture, "SMART {0:X2} {1}", attribute.Id, attribute.Name),
+                            string.Format(CultureInfo.InvariantCulture,
+                                          "raw {0}, value {1}, worst {2}, threshold {3}",
+                                          attribute.Attribute.RawValue,
+                                          attribute.Attribute.CurrentValue,
+                                          attribute.Attribute.WorstValue,
+                                          attribute.Threshold));
+            }
 
             return properties;
 
