@@ -25,7 +25,7 @@
         <converters:SensorIconConverter x:Key="SensorIconConverter"/>
     </ui:DecoratedWindow.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto"
+    <Grid RowDefinitions="Auto,*,Auto,Auto"
           ColumnDefinitions="*,Auto">
         <WrapPanel Grid.Row="0"
                    Grid.ColumnSpan="2"
@@ -71,7 +71,8 @@
                            SelectionMode="Row,Multiple"
                            KeyDown="OnTreeKeyDown"
                            SelectionChanged="OnTreeSelectionChanged"
-                           ScrollViewer.AllowAutoHide="False">
+                           ScrollViewer.AllowAutoHide="False"
+                           MinWidth="300">
             <tree:TreeDataGrid.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="{x:Static language:Resources.HideSensors}"
@@ -93,7 +94,7 @@
                 <tree:TreeDataGridHierarchicalExpanderColumn x:DataType="vm:SensorTreeNodeViewModel"
                                                              Header="{x:Static language:Resources.ColumnSensor}"
                                                              Width="4*"
-                                                             MinWidth="240"
+                                                             MinWidth="180"
                                                              ChildrenBinding="{CompiledBinding Children}"
                                                              IsExpandedBinding="{CompiledBinding IsExpanded, Mode=TwoWay}">
                     <tree:TreeDataGridHierarchicalExpanderColumn.Inner>
@@ -123,7 +124,7 @@
                 <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
                                              Header="{x:Static language:Resources.ColumnValue}"
                                              Width="*"
-                                             MinWidth="110"
+                                             MinWidth="80"
                                              Binding="{CompiledBinding Value}"
                                              HorizontalContentAlignment="Stretch"
                                              TextAlignment="Right"
@@ -133,7 +134,7 @@
                 <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
                                              Header="{x:Static language:Resources.ColumnMinimum}"
                                              Width="*"
-                                             MinWidth="110"
+                                             MinWidth="80"
                                              Binding="{CompiledBinding Min}"
                                              HorizontalContentAlignment="Stretch"
                                              TextAlignment="Right"
@@ -143,7 +144,7 @@
                 <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
                                              Header="{x:Static language:Resources.ColumnMaximum}"
                                              Width="*"
-                                             MinWidth="110"
+                                             MinWidth="80"
                                              Binding="{CompiledBinding Max}"
                                              HorizontalContentAlignment="Stretch"
                                              TextAlignment="Right"
@@ -153,7 +154,7 @@
                 <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
                                              Header="{x:Static language:Resources.ColumnAverage}"
                                              Width="*"
-                                             MinWidth="110"
+                                             MinWidth="80"
                                              Binding="{CompiledBinding Average}"
                                              HorizontalContentAlignment="Stretch"
                                              TextAlignment="Right"
@@ -161,7 +162,8 @@
             </tree:TreeDataGrid.Columns>
         </tree:TreeDataGrid>
 
-        <ScrollViewer Grid.Row="1"
+        <ScrollViewer x:Name="DetailsPane"
+                      Grid.Row="1"
                       Grid.Column="1"
                       Width="260"
                       Margin="0,12,12,12"
@@ -186,7 +188,7 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Border Grid.Row="2"
+        <Border Grid.Row="3"
                 Grid.ColumnSpan="2"
                 Padding="20,10"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"

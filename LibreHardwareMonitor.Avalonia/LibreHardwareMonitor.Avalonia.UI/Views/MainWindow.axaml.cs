@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: MPL-2.0
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -28,6 +29,8 @@ public sealed partial class MainWindow : DecoratedWindow
     {
         AvaloniaXamlLoader.Load(this);
 
+        SizeChanged += (_, e) => UpdateDetailsLayout(e.NewSize.Width);
+
         if (Design.IsDesignMode)
         {
             DataContext = MainWindowDesignData.MainWindow;
@@ -41,6 +44,33 @@ public sealed partial class MainWindow : DecoratedWindow
     public MainWindow(MainWindowViewModel viewModel) : this()
     {
         DataContext = viewModel;
+    }
+
+    /// <summary>
+    /// Window width below which the details pane moves below the tree, so the value columns stay visible.
+    /// </summary>
+    private const double NarrowWidth = 900;
+
+    /// <summary>
+    /// Places the details pane beside the tree in wide windows and below it in narrow ones.
+    /// </summary>
+    /// <param name="width">The current window width.</param>
+    private void UpdateDetailsLayout(double width)
+    {
+        ScrollViewer pane = this.FindControl<ScrollViewer>("DetailsPane");
+        if (pane == null)
+        {
+            return;
+        }
+
+        bool isNarrow = width < NarrowWidth;
+
+        Grid.SetRow(pane, isNarrow ? 2 : 1);
+        Grid.SetColumn(pane, isNarrow ? 0 : 1);
+        Grid.SetColumnSpan(pane, isNarrow ? 2 : 1);
+        pane.Width = isNarrow ? double.NaN : 260;
+        pane.MaxHeight = isNarrow ? 200 : double.PositiveInfinity;
+        pane.Margin = isNarrow ? new Thickness(12, 0, 12, 12) : new Thickness(0, 12, 12, 12);
     }
 
     /// <summary>
