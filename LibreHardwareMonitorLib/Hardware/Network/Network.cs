@@ -158,7 +158,8 @@ internal sealed class Network : Hardware
             double load = (dbits / dt / NetworkInterface.Speed) * 100;
 
             // Finally clamp the value between 0% and 100% to avoid reporting nonsensical numbers
-            _networkUtilization.Value = (float)Math.Min(Math.Max(load, 0), 100);
+            // Adapters without a link speed, for example some virtual ones, cannot report a utilization.
+            _networkUtilization.Value = NetworkInterface.Speed > 0 ? (float)Math.Min(Math.Max(load, 0), 100) : null;
 
             // Store the recorded values and time, so they can be used in the next update
             _bytesUploaded = interfaceStats.BytesSent;
