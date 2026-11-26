@@ -33,6 +33,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private readonly Dictionary<string, SensorSortOrder> _groupSortOrders = new();
     private SensorSortOption _selectedSortOrder;
     private string _status = LanguageResources.StatusSearching;
+    private string _hardwareWarning;
 
     /// <summary>
     /// Initializes the main window with sensors grouped by hardware.
@@ -404,6 +405,15 @@ public sealed class MainWindowViewModel : ObservableObject
     {
         get { return _status; }
         private set { SetProperty(ref _status, value); }
+    }
+
+    /// <summary>
+    /// Gets or sets a warning about missing hardware access, or null if sensors can be read.
+    /// </summary>
+    public string HardwareWarning
+    {
+        get { return _hardwareWarning; }
+        set { SetProperty(ref _hardwareWarning, value); }
     }
 
     /// <summary>
