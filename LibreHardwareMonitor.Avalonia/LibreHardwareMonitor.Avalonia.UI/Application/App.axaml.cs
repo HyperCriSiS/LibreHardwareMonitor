@@ -167,6 +167,7 @@ public sealed partial class App : AvaloniaApplication
                 "LibreHardwareMonitor",
                 "LibreHardwareMonitor.Avalonia.Sensors.json")));
             viewModel.RenameRequested += _monitor.Rename;
+            viewModel.ReportProvider = _monitor.CreateReportAsync;
 
             _monitor.SnapshotAvailable += snapshot => Dispatcher.UIThread.Post(() =>
             {
