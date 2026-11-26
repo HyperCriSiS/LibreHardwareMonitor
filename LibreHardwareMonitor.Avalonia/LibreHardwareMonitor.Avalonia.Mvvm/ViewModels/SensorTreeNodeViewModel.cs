@@ -113,6 +113,29 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Gets whether the node is a category that lists sensors, whose row shows sortable column captions.
+    /// </summary>
+    public bool IsCategory
+    {
+        get { return Kind == SensorTreeNodeKind.Category; }
+    }
+
+    /// <summary>
+    /// Shows column captions in a category row instead of values.
+    /// </summary>
+    /// <param name="value">The caption of the value column.</param>
+    /// <param name="min">The caption of the minimum column.</param>
+    /// <param name="max">The caption of the maximum column.</param>
+    /// <param name="average">The caption of the average column.</param>
+    public void SetCaptions(string value, string min, string max, string average)
+    {
+        Value = value;
+        Min = min;
+        Max = max;
+        Average = average;
+    }
+
+    /// <summary>
     /// Gets or sets whether the user hid this sensor.
     /// </summary>
     public bool IsHidden

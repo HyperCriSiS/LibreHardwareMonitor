@@ -117,6 +117,19 @@ public sealed partial class MainWindow : DecoratedWindow
     }
 
     /// <summary>
+    /// Sorts the sensors of one category by the clicked column.
+    /// </summary>
+    /// <param name="sender">The caption button.</param>
+    /// <param name="e">The click event.</param>
+    private void OnColumnCaptionClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel && sender is Button { DataContext: SensorTreeNodeViewModel node, Tag: string column })
+        {
+            viewModel.ToggleGroupSort(node, column);
+        }
+    }
+
+    /// <summary>
     /// Renames the selected sensor or hardware.
     /// </summary>
     /// <param name="sender">The menu item.</param>
