@@ -642,8 +642,21 @@ internal sealed class SuperIOHardware : Hardware
                         t.Add(new Temperature("VRM MOS", 2));
                         t.Add(new Temperature("PCH", 3));
                         t.Add(new Temperature("CPU Socket", 4));
-                        t.Add(new Temperature("PCIe x1", 5));
-                        t.Add(new Temperature("M2 #1", 6));
+
+                        if (model == Model.Z690_UNIFY)
+                        {
+                            // Compared with AIDA64 and HWiNFO in upstream issue 1306.
+                            t.Add(new Temperature("T Sensor #1", 5));
+                            t.Add(new Temperature("T Sensor #2", 6));
+                            t.Add(new Temperature("PCIe #1", 7));
+                            t.Add(new Temperature("M2 #1", 8));
+                            t.Add(new Temperature("PCIe #2", 9));
+                        }
+                        else
+                        {
+                            t.Add(new Temperature("PCIe x1", 5));
+                            t.Add(new Temperature("M2 #1", 6));
+                        }
 
                         f.Add(new Fan("CPU Fan", 0));
                         f.Add(new Fan("Pump Fan", 1));
@@ -4312,13 +4325,28 @@ internal sealed class SuperIOHardware : Hardware
                         v.Add(new Voltage("Voltage #13", 12, true));
                         v.Add(new Voltage("Voltage #14", 13, true));
                         v.Add(new Voltage("Voltage #15", 14, true));
-                        t.Add(new Temperature("CPU Core", 0));
-                        t.Add(new Temperature("Temperature #1", 1));
-                        t.Add(new Temperature("Temperature #2", 2));
-                        t.Add(new Temperature("Temperature #3", 3));
-                        t.Add(new Temperature("Temperature #4", 4));
-                        t.Add(new Temperature("Temperature #5", 5));
-                        t.Add(new Temperature("Temperature #6", 6));
+                        if (model == Model.B550M_ITX_AC && superIO.Chip == Chip.NCT6792D)
+                        {
+                            // Keep chip source names until the board's physical sensor locations are verified.
+                            t.Add(new Temperature("PECI 0", 0));
+                            t.Add(new Temperature("CPUTIN", 1));
+                            t.Add(new Temperature("SYSTIN", 2));
+                            t.Add(new Temperature("AUXTIN0", 3));
+                            t.Add(new Temperature("AUXTIN1", 4));
+                            t.Add(new Temperature("AUXTIN2", 5));
+                            t.Add(new Temperature("AUXTIN3", 6));
+                            t.Add(new Temperature("SMBUSMASTER0", 17));
+                        }
+                        else
+                        {
+                            t.Add(new Temperature("CPU Core", 0));
+                            t.Add(new Temperature("Temperature #1", 1));
+                            t.Add(new Temperature("Temperature #2", 2));
+                            t.Add(new Temperature("Temperature #3", 3));
+                            t.Add(new Temperature("Temperature #4", 4));
+                            t.Add(new Temperature("Temperature #5", 5));
+                            t.Add(new Temperature("Temperature #6", 6));
+                        }
 
                         for (int i = 0; i < superIO.Fans.Length; i++)
                             f.Add(new Fan("Fan #" + (i + 1), i));
@@ -4334,6 +4362,45 @@ internal sealed class SuperIOHardware : Hardware
                 string[] fanControlNames;
                 switch (model)
                 {
+                    case Model.PROART_Z490_CREATOR_10G: // NCT6798D
+                        // Names follow the connectors in the board manual. Channels 4 and 5 have no connector.
+                        f.Add(new Fan("Chassis Fan #1", 0));
+                        f.Add(new Fan("CPU Fan", 1));
+                        f.Add(new Fan("Chassis Fan #2", 2));
+                        f.Add(new Fan("Chassis Fan #3", 3));
+                        f.Add(new Fan("AIO Pump", 6));
+                        c.Add(new Control("Chassis Fan #1", 0));
+                        c.Add(new Control("CPU Fan", 1));
+                        c.Add(new Control("Chassis Fan #2", 2));
+                        c.Add(new Control("Chassis Fan #3", 3));
+                        c.Add(new Control("AIO Pump", 6));
+
+                        v.Add(new Voltage("Vcore", 0));
+                        v.Add(new Voltage("Voltage #2", 1, true));
+                        v.Add(new Voltage("AVCC", 2, 34, 34));
+                        v.Add(new Voltage("+3.3V", 3, 34, 34));
+                        v.Add(new Voltage("Voltage #5", 4, true));
+                        v.Add(new Voltage("Voltage #6", 5, true));
+                        v.Add(new Voltage("Voltage #7", 6, true));
+                        v.Add(new Voltage("+3V Standby", 7, 34, 34));
+                        v.Add(new Voltage("CMOS Battery", 8, 34, 34));
+                        v.Add(new Voltage("CPU Termination", 9));
+                        v.Add(new Voltage("Voltage #11", 10, true));
+                        v.Add(new Voltage("Voltage #12", 11, true));
+                        v.Add(new Voltage("Voltage #13", 12, true));
+                        v.Add(new Voltage("Voltage #14", 13, true));
+                        v.Add(new Voltage("Voltage #15", 14, true));
+                        // Same naming as in Asus Armory Crate
+                        t.Add(new Temperature("CPU Package", 0));
+                        // CPUTIN rose only about 2 °C while the package rose 16 °C under load, so it sits near the socket.
+                        t.Add(new Temperature("Socket", 1));
+                        // Same as EC readings
+                        t.Add(new Temperature("Motherboard", 2));
+                        // Very close to EC CPU readings
+                        t.Add(new Temperature("CPU", 22));
+
+                        break;
+
                     case Model.P8Z77_V: // NCT6779D
                         v.Add(new Voltage("Vcore", 0));
                         v.Add(new Voltage("Voltage #2", 1, true));

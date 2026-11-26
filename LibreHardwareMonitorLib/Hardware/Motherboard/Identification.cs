@@ -145,6 +145,8 @@ internal class Identification
                 return Model.B450M_Pro4;
             case var _ when name.Equals("B450M Pro4 R2.0", StringComparison.OrdinalIgnoreCase):
                 return Model.B450M_Pro4_R2_0;
+            case var _ when name.Equals("B550M-ITX/ac", StringComparison.OrdinalIgnoreCase):
+                return Model.B550M_ITX_AC;
             case var _ when name.Equals("B550M Pro4", StringComparison.OrdinalIgnoreCase):
                 return Model.B550M_Pro4;
             case var _ when name.Equals("Fatal1ty AB350 Gaming K4", StringComparison.OrdinalIgnoreCase):
@@ -183,6 +185,8 @@ internal class Identification
                 return Model.ROG_CROSSHAIR_X670E_GENE;
             case var _ when name.Equals("PROART X670E-CREATOR WIFI", StringComparison.OrdinalIgnoreCase):
                 return Model.PROART_X670E_CREATOR_WIFI;
+            case var _ when name.Equals("ProArt Z490-CREATOR 10G", StringComparison.OrdinalIgnoreCase):
+                return Model.PROART_Z490_CREATOR_10G;
             case var _ when name.Equals("M2N-SLI DELUXE", StringComparison.OrdinalIgnoreCase):
                 return Model.M2N_SLI_Deluxe;
             case var _ when name.Equals("M4A79XTD EVO", StringComparison.OrdinalIgnoreCase):
@@ -787,6 +791,8 @@ internal class Identification
                 return Model.X870E_UNIFY_X_MAX;
             case var _ when name.Equals("MEG Z790 GODLIKE MAX (MS-7D85)", StringComparison.OrdinalIgnoreCase):
                 return Model.Z790_GODLIKE_MAX;
+            case var _ when name.Equals("MEG Z690 UNIFY (MS-7D28)", StringComparison.OrdinalIgnoreCase):
+                return Model.Z690_UNIFY;
             case var _ when name.Equals("MEG Z890 ACE (MS-7E22)", StringComparison.OrdinalIgnoreCase):
                 return Model.Z890_ACE;
             case var _ when name.Equals("MEG Z890 UNIFY-X (MS-7E20)", StringComparison.OrdinalIgnoreCase):
