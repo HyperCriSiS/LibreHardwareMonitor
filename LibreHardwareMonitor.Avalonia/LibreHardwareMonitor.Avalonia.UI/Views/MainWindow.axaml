@@ -78,6 +78,12 @@
                                       IsChecked="{Binding IsMinimizeToTray}"/>
                             <CheckBox Content="{x:Static language:Resources.GadgetEnabled}"
                                       IsChecked="{Binding IsGadgetVisible}"/>
+                            <CheckBox Content="{x:Static language:Resources.LoggingEnabled}"
+                                      IsChecked="{Binding IsLoggingEnabled}"/>
+                            <Button Margin="24,0,0,0"
+                                    Content="{x:Static language:Resources.LoggingOpenFolder}"
+                                    IsEnabled="{Binding IsLoggingEnabled}"
+                                    Click="OnOpenLogFolderClick"/>
                             <CheckBox Content="{x:Static language:Resources.WebServerEnabled}"
                                       IsChecked="{Binding IsWebServerEnabled}"/>
                             <CheckBox Margin="24,0,0,0"
