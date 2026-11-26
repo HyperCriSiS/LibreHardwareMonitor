@@ -17,7 +17,7 @@
                     Title="{x:Static language:Resources.ApplicationTitle}"
                     Icon="{StaticResource LibreHardwareMonitorWindowIcon}"
                     TitleBarIcon="{StaticResource LibreHardwareMonitorTitleBarIcon}"
-                    Width="1120" Height="720"
+                    Width="1180" Height="720"
                     MinWidth="600" MinHeight="400"
                     WindowStartupLocation="CenterScreen">
 
@@ -57,6 +57,25 @@
                     Click="OnMappingClick"/>
             <ToggleButton Content="{x:Static language:Resources.DetailsLabel}"
                           IsChecked="{Binding IsDetailsVisible}"/>
+            <Button Content="{x:Static language:Resources.OptionsLabel}">
+                <Button.Flyout>
+                    <Flyout Placement="BottomEdgeAlignedRight">
+                        <StackPanel Spacing="8"
+                                    MaxWidth="360">
+                            <CheckBox Content="{x:Static language:Resources.WebServerEnabled}"
+                                      IsChecked="{Binding IsWebServerEnabled}"/>
+                            <CheckBox Margin="24,0,0,0"
+                                      Content="{x:Static language:Resources.WebServerLocalOnly}"
+                                      IsChecked="{Binding IsWebServerLocalOnly}"/>
+                            <SelectableTextBlock Margin="24,0,0,0"
+                                                 Opacity="0.7"
+                                                 TextWrapping="Wrap"
+                                                 IsVisible="{Binding IsWebServerEnabled}"
+                                                 Text="{Binding WebServerStatus}"/>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
         </WrapPanel>
 
         <tree:TreeDataGrid Grid.Row="1"

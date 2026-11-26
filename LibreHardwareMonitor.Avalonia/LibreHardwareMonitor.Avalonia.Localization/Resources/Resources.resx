@@ -79,6 +79,18 @@
   <data name="WarningPawnIoOutdated" xml:space="preserve">
     <value>PawnIO is outdated, so some sensors can stay empty. Update it from pawnio.eu and restart the app.</value>
   </data>
+  <data name="OptionsLabel" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="WebServerEnabled" xml:space="preserve">
+    <value>Web server (data.json for other apps)</value>
+  </data>
+  <data name="WebServerLocalOnly" xml:space="preserve">
+    <value>Only from this computer</value>
+  </data>
+  <data name="WebServerFailedFormat" xml:space="preserve">
+    <value>The web server could not start: {0}</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Searching for sensors...</value>
   </data>
