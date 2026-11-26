@@ -4,6 +4,7 @@
 
 ### Added
 
+- A hardware report for support requests (Options, Create report): shown for review first, then saved or copied. Serial numbers, asset tags, UUIDs, MAC addresses, the computer name and the user name are removed.
 - A read-only web server for other apps (Options, off by default): data.json in the format of the classic app on port 8085, only from this computer unless that option is turned off. Asked for in upstream issue 1035 and others.
 - The sensor mapping can rename a sensor right away, starting with a suggested name, and hide inputs that look unconnected.
 - A dashboard: pin sensors from the tree (context menu) and see them as tiles with the current value and the last minute as a line. Pinned sensors and the view are kept between sessions.

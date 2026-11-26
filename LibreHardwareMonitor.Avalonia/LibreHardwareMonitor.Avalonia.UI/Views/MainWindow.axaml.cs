@@ -74,6 +74,17 @@ public sealed partial class MainWindow : DecoratedWindow
     }
 
     /// <summary>
+    /// Shows the anonymized hardware report for review before it is saved or copied.
+    /// </summary>
+    private async void OnReportClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel { ReportProvider: { } provider })
+        {
+            new ReportWindow(await provider()).Show(this);
+        }
+    }
+
+    /// <summary>
     /// Opens the sensor mapping assistant.
     /// </summary>
     /// <param name="sender">The button.</param>

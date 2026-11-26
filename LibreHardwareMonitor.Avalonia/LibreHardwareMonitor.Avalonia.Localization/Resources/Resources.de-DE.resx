@@ -103,6 +103,24 @@
   <data name="WebServerFailedFormat" xml:space="preserve">
     <value>Der Webserver konnte nicht starten: {0}</value>
   </data>
+  <data name="ReportOpen" xml:space="preserve">
+    <value>Bericht erstellen…</value>
+  </data>
+  <data name="ReportTitle" xml:space="preserve">
+    <value>Hardware-Bericht</value>
+  </data>
+  <data name="ReportHint" xml:space="preserve">
+    <value>Dieser Bericht hilft, deine Hardware zu unterstützen. Seriennummern, Inventarnummern, UUIDs, MAC-Adressen, Rechnername und Benutzername sind entfernt. Bitte prüfe ihn, bevor du ihn weitergibst.</value>
+  </data>
+  <data name="ReportCopy" xml:space="preserve">
+    <value>Kopieren</value>
+  </data>
+  <data name="ReportSave" xml:space="preserve">
+    <value>Speichern…</value>
+  </data>
+  <data name="ReportClose" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Sensoren werden gesucht...</value>
   </data>
