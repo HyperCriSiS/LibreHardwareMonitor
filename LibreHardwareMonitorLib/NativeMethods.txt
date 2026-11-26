@@ -29,6 +29,7 @@ WIN32_ERROR
 HRESULT_FROM_WIN32
 GlobalMemoryStatusEx
 GetCurrentThread
+GetActiveProcessorCount
 GetActiveProcessorGroupCount
 GROUP_AFFINITY
 SetThreadGroupAffinity
