@@ -33,6 +33,11 @@ public sealed class SensorMonitor : IDisposable
     private readonly ConcurrentQueue<(string Identifier, string Name)> _renames = new();
 
     /// <summary>
+    /// A pause between two polls longer than this is treated as a resume from sleep.
+    /// </summary>
+    private static readonly TimeSpan ResumeGap = TimeSpan.FromSeconds(15);
+
+    /// <summary>
     /// Initializes the monitor.
     /// </summary>
     /// <param name="settings">Stores custom names between sessions, or null to keep them only in memory.</param>
@@ -161,9 +166,20 @@ public sealed class SensorMonitor : IDisposable
         try
         {
             _computer.Open();
+            long lastPoll = Environment.TickCount64;
 
             while (!cancellationToken.IsCancellationRequested)
             {
+                // The tick count keeps running during sleep, so a long gap means the system was asleep. Some chips
+                // lose their configuration then and report 0 RPM or full duty until they are opened again.
+                long now = Environment.TickCount64;
+                if (now - lastPoll > ResumeGap.TotalMilliseconds)
+                {
+                    _computer.Reset();
+                }
+
+                lastPoll = now;
+
                 foreach (IHardware hardware in _computer.Hardware)
                 {
                     UpdateHardware(hardware);
