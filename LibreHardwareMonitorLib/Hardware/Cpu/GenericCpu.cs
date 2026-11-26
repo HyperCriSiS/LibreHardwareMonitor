@@ -5,6 +5,7 @@
 // All Rights Reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -108,6 +109,28 @@ public class GenericCpu : Hardware
     /// Gets the CPUID.
     /// </summary>
     public CpuId[][] CpuId => _cpuId;
+
+    public override IDictionary<string, string> Properties
+    {
+        get
+        {
+            SortedDictionary<string, string> properties = new();
+
+            AddProperty("Vendor", _vendor.ToString());
+            AddProperty("Family", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", _family));
+            AddProperty("Model", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", _model));
+            AddProperty("Stepping", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", _stepping));
+            AddProperty("Threads", _threadCount.ToString(CultureInfo.InvariantCulture));
+
+            return properties;
+
+            void AddProperty(string name, string value)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                    properties.Add(name, value);
+            }
+        }
+    }
 
     public override HardwareType HardwareType => HardwareType.Cpu;
 
