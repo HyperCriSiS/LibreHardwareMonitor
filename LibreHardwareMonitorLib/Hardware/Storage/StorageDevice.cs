@@ -64,6 +64,34 @@ public sealed class StorageDevice : Hardware, ISmart
 
     public StorageDeviceDIT Storage => _storage;
 
+    /// <summary>
+    /// Classifies the drive as "SSD", "HDD", "Removable" or "Virtual". Drives report no rotation rate here, so SSDs are
+    /// recognized by NVMe, by flash wear attributes or by their name.
+    /// </summary>
+    private string GetDriveType()
+    {
+        switch (_storage.BusType.ToString())
+        {
+            case "Virtual":
+            case "FileBackedVirtual":
+            case "Unknown":
+                return "Virtual";
+        }
+
+        if (_storage.IsUsbConnected || _storage.IsRemovable)
+            return "Removable";
+
+        if (_storage.BusType.ToString() == "Nvme" ||
+            _storage.WearLevelingCount != null ||
+            _storage.NandWrites != null ||
+            (_storage.ProductName?.IndexOf("SSD", StringComparison.OrdinalIgnoreCase) ?? -1) >= 0)
+        {
+            return "SSD";
+        }
+
+        return "HDD";
+    }
+
     public override IDictionary<string, string> Properties
     {
         get
@@ -75,6 +103,7 @@ public sealed class StorageDevice : Hardware, ISmart
             AddProperty("Bus type", _storage.BusType.ToString());
             AddProperty("Controller", _storage.Controller?.DeviceName);
             AddProperty("Controller vendor", _storage.Controller?.VendorName);
+            AddProperty("Drive type", GetDriveType());
 
             return properties;
 
