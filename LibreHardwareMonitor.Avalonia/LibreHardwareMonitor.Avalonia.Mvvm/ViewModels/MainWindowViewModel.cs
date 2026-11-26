@@ -29,6 +29,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private string _filterText = string.Empty;
     private readonly HashSet<string> _hiddenSensors = new();
     private bool _showHidden;
+    private readonly Dictionary<string, SensorSortOrder> _groupSortOrders = new();
     private SensorSortOption _selectedSortOrder;
     private string _status = LanguageResources.StatusSearching;
 
@@ -168,8 +169,67 @@ public sealed class MainWindowViewModel : ObservableObject
     [
         new(SensorSortOrder.Default, LanguageResources.SortDefault),
         new(SensorSortOrder.Name, LanguageResources.SortName),
-        new(SensorSortOrder.ValueDescending, LanguageResources.SortValue)
+        new(SensorSortOrder.ValueDescending, LanguageResources.SortValue),
+        new(SensorSortOrder.ValueAscending, LanguageResources.SortValueAscending),
+        new(SensorSortOrder.MaxDescending, LanguageResources.SortMax),
+        new(SensorSortOrder.AverageDescending, LanguageResources.SortAverage)
     ];
+
+    /// <summary>
+    /// Changes the order of the sensors below one category: descending, ascending, then back to the general order.
+    /// </summary>
+    /// <param name="node">The category.</param>
+    /// <param name="column">The column: "Value", "Min", "Max" or "Average".</param>
+    public void ToggleGroupSort(SensorTreeNodeViewModel node, string column)
+    {
+        if (node?.Kind != SensorTreeNodeKind.Category || !Enum.TryParse(column + "Descending", out SensorSortOrder descending))
+        {
+            return;
+        }
+
+        SensorSortOrder ascending = descending + 1;
+
+        if (!_groupSortOrders.TryGetValue(node.Identifier, out SensorSortOrder current) || (current != descending && current != ascending))
+        {
+            _groupSortOrders[node.Identifier] = descending;
+        }
+        else if (current == descending)
+        {
+            _groupSortOrders[node.Identifier] = ascending;
+        }
+        else
+        {
+            _groupSortOrders.Remove(node.Identifier);
+        }
+
+        UpdateTree();
+    }
+
+    /// <summary>
+    /// Shows the column captions in the category rows, with an arrow at the column a category is sorted by.
+    /// </summary>
+    /// <param name="nodes">The nodes to update.</param>
+    private void SetCaptions(IEnumerable<SensorTreeNodeViewModel> nodes)
+    {
+        foreach (SensorTreeNodeViewModel node in nodes)
+        {
+            if (node.IsCategory)
+            {
+                _groupSortOrders.TryGetValue(node.Identifier, out SensorSortOrder order);
+                node.SetCaptions(Caption(LanguageResources.ColumnValue, order, SensorSortOrder.ValueDescending),
+                                 Caption(LanguageResources.ColumnMinimum, order, SensorSortOrder.MinDescending),
+                                 Caption(LanguageResources.ColumnMaximum, order, SensorSortOrder.MaxDescending),
+                                 Caption(LanguageResources.ColumnAverage, order, SensorSortOrder.AverageDescending));
+            }
+
+            SetCaptions(node.Children);
+        }
+
+        static string Caption(string caption, SensorSortOrder order, SensorSortOrder descending)
+        {
+            return order == descending ? caption + " \u25BC" : order == descending + 1 ? caption + " \u25B2" : caption;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the order of the sensors within their parent.
@@ -359,8 +419,9 @@ public sealed class MainWindowViewModel : ObservableObject
         {
             IReadOnlyList<SensorTreeNodeSnapshot> roots = SensorTreeGrouping.GetRoots(_snapshot, SelectedGrouping.Grouping);
 
-            SensorTreeReconciler.Reconcile(Hardware, SensorTreeFilter.Apply(roots, FilterText, SelectedSortOrder.SortOrder, ShowHidden ? null : _hiddenSensors));
+            SensorTreeReconciler.Reconcile(Hardware, SensorTreeFilter.Apply(roots, FilterText, SelectedSortOrder.SortOrder, ShowHidden ? null : _hiddenSensors, _groupSortOrders));
             MarkHidden(Hardware);
+            SetCaptions(Hardware);
             UpdateDetails();
         }
     }

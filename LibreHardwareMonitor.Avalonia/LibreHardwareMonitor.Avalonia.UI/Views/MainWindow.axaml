@@ -89,6 +89,13 @@
             </tree:TreeDataGrid.ContextMenu>
 
             <tree:TreeDataGrid.Styles>
+                <Style Selector="Button.column-caption">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="6,0,10,0"/>
+                    <Setter Property="Opacity" Value="0.6"/>
+                    <Setter Property="FontSize" Value="11"/>
+                </Style>
                 <Style Selector="primitives|TreeDataGridTextCell">
                     <Setter Property="Padding" Value="6,2,10,2"/>
                 </Style>
@@ -126,44 +133,104 @@
                 </tree:TreeDataGridHierarchicalExpanderColumn>
 
                 <!-- Sensor Value -->
-                <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
-                                             Header="{x:Static language:Resources.ColumnValue}"
-                                             Width="*"
-                                             MinWidth="80"
-                                             Binding="{CompiledBinding Value}"
-                                             HorizontalContentAlignment="Stretch"
-                                             TextAlignment="Right"
-                                             IsReadOnly="True"/>
+                <tree:TreeDataGridTemplateColumn x:DataType="vm:SensorTreeNodeViewModel"
+                                                 Header="{x:Static language:Resources.ColumnValue}"
+                                                 Width="*"
+                                                 MinWidth="80">
+                    <tree:TreeDataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SensorTreeNodeViewModel">
+                            <Panel>
+                                <TextBlock Margin="6,2,10,2"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Right"
+                                           IsVisible="{Binding !IsCategory}"
+                                           Text="{Binding Value}"/>
+                                <Button Classes="column-caption"
+                                        HorizontalAlignment="Right"
+                                        IsVisible="{Binding IsCategory}"
+                                        Content="{Binding Value}"
+                                        Tag="Value"
+                                        ToolTip.Tip="{x:Static language:Resources.SortColumnHint}"
+                                        Click="OnColumnCaptionClick"/>
+                            </Panel>
+                        </DataTemplate>
+                    </tree:TreeDataGridTemplateColumn.CellTemplate>
+                </tree:TreeDataGridTemplateColumn>
 
                 <!-- Sensor Minimum -->
-                <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
-                                             Header="{x:Static language:Resources.ColumnMinimum}"
-                                             Width="*"
-                                             MinWidth="80"
-                                             Binding="{CompiledBinding Min}"
-                                             HorizontalContentAlignment="Stretch"
-                                             TextAlignment="Right"
-                                             IsReadOnly="True"/>
+                <tree:TreeDataGridTemplateColumn x:DataType="vm:SensorTreeNodeViewModel"
+                                                 Header="{x:Static language:Resources.ColumnMinimum}"
+                                                 Width="*"
+                                                 MinWidth="80">
+                    <tree:TreeDataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SensorTreeNodeViewModel">
+                            <Panel>
+                                <TextBlock Margin="6,2,10,2"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Right"
+                                           IsVisible="{Binding !IsCategory}"
+                                           Text="{Binding Min}"/>
+                                <Button Classes="column-caption"
+                                        HorizontalAlignment="Right"
+                                        IsVisible="{Binding IsCategory}"
+                                        Content="{Binding Min}"
+                                        Tag="Min"
+                                        ToolTip.Tip="{x:Static language:Resources.SortColumnHint}"
+                                        Click="OnColumnCaptionClick"/>
+                            </Panel>
+                        </DataTemplate>
+                    </tree:TreeDataGridTemplateColumn.CellTemplate>
+                </tree:TreeDataGridTemplateColumn>
 
                 <!-- Sensor Maximum -->
-                <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
-                                             Header="{x:Static language:Resources.ColumnMaximum}"
-                                             Width="*"
-                                             MinWidth="80"
-                                             Binding="{CompiledBinding Max}"
-                                             HorizontalContentAlignment="Stretch"
-                                             TextAlignment="Right"
-                                             IsReadOnly="True"/>
+                <tree:TreeDataGridTemplateColumn x:DataType="vm:SensorTreeNodeViewModel"
+                                                 Header="{x:Static language:Resources.ColumnMaximum}"
+                                                 Width="*"
+                                                 MinWidth="80">
+                    <tree:TreeDataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SensorTreeNodeViewModel">
+                            <Panel>
+                                <TextBlock Margin="6,2,10,2"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Right"
+                                           IsVisible="{Binding !IsCategory}"
+                                           Text="{Binding Max}"/>
+                                <Button Classes="column-caption"
+                                        HorizontalAlignment="Right"
+                                        IsVisible="{Binding IsCategory}"
+                                        Content="{Binding Max}"
+                                        Tag="Max"
+                                        ToolTip.Tip="{x:Static language:Resources.SortColumnHint}"
+                                        Click="OnColumnCaptionClick"/>
+                            </Panel>
+                        </DataTemplate>
+                    </tree:TreeDataGridTemplateColumn.CellTemplate>
+                </tree:TreeDataGridTemplateColumn>
 
                 <!-- Sensor Average -->
-                <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
-                                             Header="{x:Static language:Resources.ColumnAverage}"
-                                             Width="*"
-                                             MinWidth="80"
-                                             Binding="{CompiledBinding Average}"
-                                             HorizontalContentAlignment="Stretch"
-                                             TextAlignment="Right"
-                                             IsReadOnly="True"/>
+                <tree:TreeDataGridTemplateColumn x:DataType="vm:SensorTreeNodeViewModel"
+                                                 Header="{x:Static language:Resources.ColumnAverage}"
+                                                 Width="*"
+                                                 MinWidth="80">
+                    <tree:TreeDataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:SensorTreeNodeViewModel">
+                            <Panel>
+                                <TextBlock Margin="6,2,10,2"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Right"
+                                           IsVisible="{Binding !IsCategory}"
+                                           Text="{Binding Average}"/>
+                                <Button Classes="column-caption"
+                                        HorizontalAlignment="Right"
+                                        IsVisible="{Binding IsCategory}"
+                                        Content="{Binding Average}"
+                                        Tag="Average"
+                                        ToolTip.Tip="{x:Static language:Resources.SortColumnHint}"
+                                        Click="OnColumnCaptionClick"/>
+                            </Panel>
+                        </DataTemplate>
+                    </tree:TreeDataGridTemplateColumn.CellTemplate>
+                </tree:TreeDataGridTemplateColumn>
             </tree:TreeDataGrid.Columns>
         </tree:TreeDataGrid>
 

@@ -208,6 +208,18 @@
   <data name="RenameCancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="SortValueAscending" xml:space="preserve">
+    <value>Lowest value</value>
+  </data>
+  <data name="SortMax" xml:space="preserve">
+    <value>Highest maximum</value>
+  </data>
+  <data name="SortAverage" xml:space="preserve">
+    <value>Highest average</value>
+  </data>
+  <data name="SortColumnHint" xml:space="preserve">
+    <value>Click to sort this group</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Voltages</value>
   </data>
