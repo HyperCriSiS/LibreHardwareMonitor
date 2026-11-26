@@ -79,6 +79,18 @@
   <data name="WarningPawnIoOutdated" xml:space="preserve">
     <value>PawnIO ist veraltet, daher können einige Sensoren leer bleiben. Aktualisiere es von pawnio.eu und starte die App neu.</value>
   </data>
+  <data name="DashboardLabel" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="DashboardPin" xml:space="preserve">
+    <value>An Dashboard anheften</value>
+  </data>
+  <data name="DashboardUnpin" xml:space="preserve">
+    <value>Vom Dashboard entfernen</value>
+  </data>
+  <data name="DashboardEmpty" xml:space="preserve">
+    <value>Noch nichts angeheftet. Rechtsklick auf einen Sensor im Baum und "An Dashboard anheften" wählen.</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Sensoren werden gesucht...</value>
   </data>

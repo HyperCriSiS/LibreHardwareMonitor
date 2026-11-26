@@ -4,6 +4,7 @@
 
 ### Added
 
+- A dashboard: pin sensors from the tree (context menu) and see them as tiles with the current value and the last minute as a line. Pinned sensors and the view are kept between sessions.
 - The MSI MPG Ai1300TS PCIE5 power supply: rail currents, the twelve 12V-2x6 pin currents (GPU Safeguard+), output power, efficiency, temperature and fan. Data from upstream issues 2647 and 2361.
 - A warning in the status bar when PawnIO is missing or outdated, because CPU, motherboard and memory sensors then stay empty. Prompted by upstream issues 2348 and 2363.
 - Temperature names for the MSI MEG Z690 Unify, including both T sensors, PCIe and M.2. Data from upstream issue 1306.

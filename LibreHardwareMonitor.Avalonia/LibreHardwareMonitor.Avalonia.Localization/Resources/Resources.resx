@@ -79,6 +79,18 @@
   <data name="WarningPawnIoOutdated" xml:space="preserve">
     <value>PawnIO is outdated, so some sensors can stay empty. Update it from pawnio.eu and restart the app.</value>
   </data>
+  <data name="DashboardLabel" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="DashboardPin" xml:space="preserve">
+    <value>Pin to dashboard</value>
+  </data>
+  <data name="DashboardUnpin" xml:space="preserve">
+    <value>Remove from dashboard</value>
+  </data>
+  <data name="DashboardEmpty" xml:space="preserve">
+    <value>Nothing pinned yet. Right-click a sensor in the tree and choose "Pin to dashboard".</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Searching for sensors...</value>
   </data>
