@@ -11,6 +11,23 @@ namespace LibreHardwareMonitor.Avalonia.Monitoring.Services;
 public static class SensorCategoryName
 {
     /// <summary>
+    /// Gets the translated name for a sensor measurement type of a specific kind of hardware.
+    /// </summary>
+    /// <param name="sensorType">The sensor measurement type.</param>
+    /// <param name="hardwareType">The hardware that provides the sensors, if known.</param>
+    /// <returns>The translated category name.</returns>
+    public static string GetName(SensorType sensorType, HardwareType? hardwareType)
+    {
+        // The factors of a CPU are the multipliers of its cores.
+        if (sensorType == SensorType.Factor && hardwareType == HardwareType.Cpu)
+        {
+            return LanguageResources.GroupMultipliers;
+        }
+
+        return GetName(sensorType);
+    }
+
+    /// <summary>
     /// Gets the translated name for a sensor measurement type.
     /// </summary>
     /// <param name="sensorType">The sensor measurement type.</param>
