@@ -136,6 +136,7 @@ public sealed class MainWindowViewModel : ObservableObject
         ShowHidden = settings.ShowHidden;
         ShowAdvanced = settings.ShowAdvanced;
         IsDetailsVisible = settings.IsDetailsVisible;
+        DetailsWidth = settings.DetailsWidth is > 0 and < 10000 ? settings.DetailsWidth : MainWindowDefaults.DetailsWidth;
         WebServerPort = settings.WebServerPort is > 0 and < 65536 ? settings.WebServerPort : 8085;
         IsWebServerLocalOnly = settings.IsWebServerLocalOnly;
         IsWebServerEnabled = settings.IsWebServerEnabled;
@@ -170,6 +171,7 @@ public sealed class MainWindowViewModel : ObservableObject
             ShowHidden = ShowHidden,
             ShowAdvanced = ShowAdvanced,
             IsDetailsVisible = IsDetailsVisible,
+            DetailsWidth = DetailsWidth,
             IsWebServerEnabled = IsWebServerEnabled,
             IsLoggingEnabled = IsLoggingEnabled,
             IsGadgetVisible = IsGadgetVisible,
@@ -807,6 +809,19 @@ public sealed class MainWindowViewModel : ObservableObject
     {
         get { return _webServerStatus; }
         set { SetProperty(ref _webServerStatus, value); }
+    }
+
+    /// <summary>
+    /// Gets or sets the width of the details pane beside the tree. The window stores it when the user finishes dragging.
+    /// </summary>
+    public double DetailsWidth { get; set; } = MainWindowDefaults.DetailsWidth;
+
+    /// <summary>
+    /// Stores the current view choices, for example after the details pane was resized.
+    /// </summary>
+    public void SaveSettings()
+    {
+        SettingsChanged?.Invoke();
     }
 
     /// <summary>

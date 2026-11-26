@@ -7,6 +7,17 @@ using LibreHardwareMonitor.Avalonia.Monitoring.Models;
 namespace LibreHardwareMonitor.Avalonia.Mvvm.Services;
 
 /// <summary>
+/// Default sizes of the main window.
+/// </summary>
+public static class MainWindowDefaults
+{
+    /// <summary>
+    /// The default width of the details pane beside the tree.
+    /// </summary>
+    public const double DetailsWidth = 260;
+}
+
+/// <summary>
 /// Holds the view choices that are kept between sessions.
 /// </summary>
 public sealed class ViewSettings
@@ -30,6 +41,11 @@ public sealed class ViewSettings
     /// Gets or sets whether advanced values are shown.
     /// </summary>
     public bool ShowAdvanced { get; set; }
+
+    /// <summary>
+    /// Gets or sets the width of the details pane beside the tree.
+    /// </summary>
+    public double DetailsWidth { get; set; } = MainWindowDefaults.DetailsWidth;
 
     /// <summary>
     /// Gets or sets whether the details pane is visible.

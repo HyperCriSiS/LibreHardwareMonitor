@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using BlackSharp.UI.Avalonia.Controls;
 using BlackSharp.UI.Avalonia.TreeDataGrid.Selection;
+using LibreHardwareMonitor.Avalonia.Mvvm.Services;
 using LibreHardwareMonitor.Avalonia.Mvvm.ViewModels;
 using LibreHardwareMonitor.Avalonia.UI.MockData;
 
@@ -92,13 +93,86 @@ public sealed partial class MainWindow : DecoratedWindow
         }
 
         bool isNarrow = width < NarrowWidth;
+        double detailsWidth = DataContext is MainWindowViewModel viewModel ? ClampDetailsWidth(viewModel.DetailsWidth, width) : MainWindowDefaults.DetailsWidth;
+
+        if (this.FindControl<Border>("DetailsSplitter") is { } splitter)
+        {
+            // Below the tree the pane takes the full width, so there is nothing to drag.
+            splitter.IsHitTestVisible = !isNarrow;
+            splitter.Opacity = isNarrow ? 0 : 1;
+        }
 
         Grid.SetRow(pane, isNarrow ? 2 : 1);
         Grid.SetColumn(pane, isNarrow ? 0 : 1);
         Grid.SetColumnSpan(pane, isNarrow ? 2 : 1);
-        pane.Width = isNarrow ? double.NaN : 260;
+        pane.Width = isNarrow ? double.NaN : detailsWidth;
         pane.MaxHeight = isNarrow ? 200 : double.PositiveInfinity;
         pane.Margin = isNarrow ? new Thickness(12, 0, 12, 12) : new Thickness(0, 12, 12, 12);
+    }
+
+    /// <summary>
+    /// The narrowest details pane and the width the tree keeps at least.
+    /// </summary>
+    private const double MinDetailsWidth = 200;
+
+    private const double MinTreeWidth = 400;
+
+    private double _dragStartX;
+    private double _dragStartWidth;
+    private bool _isDraggingDetails;
+
+    /// <summary>
+    /// Keeps the details pane between its minimum width and the space the tree needs.
+    /// </summary>
+    private static double ClampDetailsWidth(double width, double windowWidth)
+    {
+        double max = Math.Max(MinDetailsWidth, windowWidth - MinTreeWidth);
+        return Math.Clamp(width, MinDetailsWidth, max);
+    }
+
+    /// <summary>
+    /// Starts resizing the details pane.
+    /// </summary>
+    private void OnDetailsSplitterPressed(object sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border splitter && splitter.IsHitTestVisible && this.FindControl<ScrollViewer>("DetailsPane") is { } pane &&
+            e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            _isDraggingDetails = true;
+            _dragStartX = e.GetPosition(this).X;
+            _dragStartWidth = pane.Bounds.Width;
+            e.Pointer.Capture(splitter);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Resizes the details pane while dragging; moving left makes it wider.
+    /// </summary>
+    private void OnDetailsSplitterMoved(object sender, PointerEventArgs e)
+    {
+        if (_isDraggingDetails && this.FindControl<ScrollViewer>("DetailsPane") is { } pane)
+        {
+            pane.Width = ClampDetailsWidth(_dragStartWidth + (_dragStartX - e.GetPosition(this).X), Bounds.Width);
+        }
+    }
+
+    /// <summary>
+    /// Finishes resizing and stores the width.
+    /// </summary>
+    private void OnDetailsSplitterReleased(object sender, PointerReleasedEventArgs e)
+    {
+        if (!_isDraggingDetails)
+            return;
+
+        _isDraggingDetails = false;
+        e.Pointer.Capture(null);
+
+        if (DataContext is MainWindowViewModel viewModel && this.FindControl<ScrollViewer>("DetailsPane") is { } pane)
+        {
+            viewModel.DetailsWidth = pane.Width;
+            viewModel.SaveSettings();
+        }
     }
 
     /// <summary>

@@ -357,6 +357,20 @@
             </tree:TreeDataGrid.Columns>
         </tree:TreeDataGrid>
 
+        <Border x:Name="DetailsSplitter"
+                Grid.Row="1"
+                Grid.Column="1"
+                Width="8"
+                Margin="-8,12,0,12"
+                HorizontalAlignment="Left"
+                Background="Transparent"
+                Cursor="SizeWestEast"
+                ZIndex="1"
+                IsVisible="{Binding IsDetailsVisible}"
+                PointerPressed="OnDetailsSplitterPressed"
+                PointerMoved="OnDetailsSplitterMoved"
+                PointerReleased="OnDetailsSplitterReleased"/>
+
         <ScrollViewer x:Name="DetailsPane"
                       Grid.Row="1"
                       Grid.Column="1"
