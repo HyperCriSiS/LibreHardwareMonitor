@@ -47,6 +47,43 @@ public sealed class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Occurs when a view choice that is kept between sessions changes.
+    /// </summary>
+    public event Action SettingsChanged;
+
+    /// <summary>
+    /// Restores view choices from a previous session.
+    /// </summary>
+    /// <param name="settings">The stored view choices.</param>
+    public void ApplySettings(ViewSettings settings)
+    {
+        _hiddenSensors.Clear();
+        _hiddenSensors.UnionWith(settings.HiddenSensors ?? []);
+
+        SelectedGrouping = Groupings.FirstOrDefault(option => option.Grouping == settings.Grouping) ?? Groupings[0];
+        SelectedSortOrder = SortOrders.FirstOrDefault(option => option.SortOrder == settings.SortOrder) ?? SortOrders[0];
+        ShowHidden = settings.ShowHidden;
+        IsDetailsVisible = settings.IsDetailsVisible;
+        UpdateTree();
+    }
+
+    /// <summary>
+    /// Gets the view choices to keep for the next session.
+    /// </summary>
+    /// <returns>The current view choices.</returns>
+    public ViewSettings GetSettings()
+    {
+        return new ViewSettings
+        {
+            Grouping = SelectedGrouping.Grouping,
+            SortOrder = SelectedSortOrder.SortOrder,
+            ShowHidden = ShowHidden,
+            IsDetailsVisible = IsDetailsVisible,
+            HiddenSensors = _hiddenSensors.Order(StringComparer.Ordinal).ToList()
+        };
+    }
+
+    /// <summary>
     /// Gets the available arrangements of the sensor tree.
     /// </summary>
     public IReadOnlyList<SensorGroupingOption> Groupings { get; } =
@@ -68,6 +105,7 @@ public sealed class MainWindowViewModel : ObservableObject
                 SelectedNode = null;
                 UpdateTree();
                 OnPropertyChanged(nameof(Hardware));
+                SettingsChanged?.Invoke();
             }
         }
     }
@@ -93,6 +131,7 @@ public sealed class MainWindowViewModel : ObservableObject
             if (value != null && SetProperty(ref _selectedSortOrder, value))
             {
                 UpdateTree();
+                SettingsChanged?.Invoke();
             }
         }
     }
@@ -123,6 +162,7 @@ public sealed class MainWindowViewModel : ObservableObject
             if (SetProperty(ref _showHidden, value))
             {
                 UpdateTree();
+                SettingsChanged?.Invoke();
             }
         }
     }
@@ -147,6 +187,7 @@ public sealed class MainWindowViewModel : ObservableObject
         }
 
         UpdateTree();
+        SettingsChanged?.Invoke();
     }
 
     /// <summary>
@@ -212,7 +253,13 @@ public sealed class MainWindowViewModel : ObservableObject
     public bool IsDetailsVisible
     {
         get { return _isDetailsVisible; }
-        set { SetProperty(ref _isDetailsVisible, value); }
+        set
+        {
+            if (SetProperty(ref _isDetailsVisible, value))
+            {
+                SettingsChanged?.Invoke();
+            }
+        }
     }
 
     /// <summary>
