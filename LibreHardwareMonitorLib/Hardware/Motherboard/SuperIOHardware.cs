@@ -142,7 +142,7 @@ internal sealed class SuperIOHardware : Hardware
         {
             if (temperature.Index < superIO.Temperatures.Length)
             {
-                Sensor sensor = new(temperature.Name,
+                Sensor sensor = new(GetTemperatureName(superIO, temperature),
                                     temperature.Index,
                                     SensorType.Temperature,
                                     this,
@@ -152,6 +152,21 @@ internal sealed class SuperIOHardware : Hardware
                 _temperatures.Add(sensor);
             }
         }
+    }
+
+    /// <summary>
+    /// Adds the chip input to placeholder names, so unknown boards show which input a channel reads.
+    /// </summary>
+    private static string GetTemperatureName(ISuperIO superIO, Temperature temperature)
+    {
+        if (superIO is Nct677X nct &&
+            temperature.Name.StartsWith("Temperature #", StringComparison.Ordinal) &&
+            nct.GetTemperatureSourceName(temperature.Index) is { } source)
+        {
+            return $"{temperature.Name} ({source})";
+        }
+
+        return temperature.Name;
     }
 
     private void CreateVoltageSensors(ISuperIO superIO, ISettings settings, IList<Voltage> v)

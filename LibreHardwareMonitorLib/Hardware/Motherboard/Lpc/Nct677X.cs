@@ -1574,6 +1574,16 @@ internal class Nct677X : ISuperIO
             : (sbyte)rawTemperature;
     }
 
+    /// <summary>
+    /// Gets the name of the chip input that a temperature channel reads, for example SYSTIN or AUXTIN0.
+    /// </summary>
+    /// <param name="index">The index in <see cref="Temperatures" />.</param>
+    /// <returns>The input name, or null if it is unknown.</returns>
+    internal string GetTemperatureSourceName(int index)
+    {
+        return index >= 0 && index < _temperaturesSource.Length ? _temperaturesSource[index].Source?.ToString().Replace('_', ' ') : null;
+    }
+
     [Conditional("DEBUG_LOG"), Conditional("NCT677X_DEBUG_LOG")]
     private static void Log(string format, params object[] args)
     {
