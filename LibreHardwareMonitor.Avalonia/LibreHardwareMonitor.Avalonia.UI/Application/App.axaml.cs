@@ -28,6 +28,7 @@ public sealed partial class App : AvaloniaApplication
     /// </summary>
     private SensorMonitor _monitor;
     private SensorWebServer _webServer;
+    private TrayIcon _trayIcon;
     private volatile SensorTreeSnapshot _lastSnapshot;
     private (bool Enabled, bool LocalOnly, int Port) _webServerConfiguration;
 
@@ -48,6 +49,42 @@ public sealed partial class App : AvaloniaApplication
         {
             Global.FontManager = new FontService();
         }
+    }
+
+    /// <summary>
+    /// Shows or removes the icon in the notification area to match the settings.
+    /// </summary>
+    /// <param name="viewModel">The main window state.</param>
+    /// <param name="desktop">The application lifetime, to show the window and to exit.</param>
+    private void UpdateTrayIcon(MainWindowViewModel viewModel, IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        if (viewModel.IsTrayIconEnabled == (_trayIcon != null))
+            return;
+
+        if (_trayIcon != null)
+        {
+            TrayIcon.SetIcons(this, null);
+            _trayIcon.Dispose();
+            _trayIcon = null;
+
+            // Without the icon a hidden window could not be reached anymore.
+            (desktop.MainWindow as MainWindow)?.Restore();
+            return;
+        }
+
+        NativeMenuItem show = new(LanguageResources.TrayShow);
+        show.Click += (_, _) => (desktop.MainWindow as MainWindow)?.Restore();
+        NativeMenuItem exit = new(LanguageResources.TrayExit);
+        exit.Click += (_, _) => desktop.Shutdown();
+
+        _trayIcon = new TrayIcon
+        {
+            Icon = (WindowIcon)Resources["LibreHardwareMonitorWindowIcon"],
+            ToolTipText = viewModel.GetTrayText(),
+            Menu = new NativeMenu { show, exit }
+        };
+        _trayIcon.Clicked += (_, _) => (desktop.MainWindow as MainWindow)?.Restore();
+        TrayIcon.SetIcons(this, new TrayIcons { _trayIcon });
     }
 
     /// <summary>
@@ -111,7 +148,13 @@ public sealed partial class App : AvaloniaApplication
             viewModel.RenameRequested += _monitor.Rename;
             viewModel.ReportProvider = _monitor.CreateReportAsync;
 
-            _monitor.SnapshotAvailable += snapshot => Dispatcher.UIThread.Post(() => viewModel.Apply(snapshot));
+            _monitor.SnapshotAvailable += snapshot => Dispatcher.UIThread.Post(() =>
+            {
+                viewModel.Apply(snapshot);
+
+                if (_trayIcon != null)
+                    _trayIcon.ToolTipText = viewModel.GetTrayText();
+            });
             _monitor.SnapshotAvailable += snapshot =>
             {
                 _lastSnapshot = snapshot;
@@ -119,12 +162,15 @@ public sealed partial class App : AvaloniaApplication
             };
             viewModel.SettingsChanged += () => UpdateWebServer(viewModel);
             UpdateWebServer(viewModel);
+            viewModel.SettingsChanged += () => UpdateTrayIcon(viewModel, desktop);
+            UpdateTrayIcon(viewModel, desktop);
             _monitor.ErrorOccurred += message => Dispatcher.UIThread.Post(() => viewModel.ShowError(message));
 
             desktop.Exit += (_, _) =>
             {
                 _monitor.Dispose();
                 _webServer?.Dispose();
+                _trayIcon?.Dispose();
             };
 
             _monitor.Start();

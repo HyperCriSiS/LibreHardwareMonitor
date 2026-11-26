@@ -47,6 +47,34 @@ public sealed partial class MainWindow : DecoratedWindow
     }
 
     /// <summary>
+    /// Hides the window to the notification area when it is minimized and the option is on.
+    /// </summary>
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (change.Property == WindowStateProperty &&
+            WindowState == WindowState.Minimized &&
+            DataContext is MainWindowViewModel { IsTrayIconEnabled: true, IsMinimizeToTray: true })
+        {
+            Hide();
+        }
+    }
+
+    /// <summary>
+    /// Shows the window again, for example after a click on the notification area icon.
+    /// </summary>
+    public void Restore()
+    {
+        Show();
+
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+
+        Activate();
+    }
+
+    /// <summary>
     /// Window width below which the details pane moves below the tree, so the value columns stay visible.
     /// </summary>
     private const double NarrowWidth = 900;

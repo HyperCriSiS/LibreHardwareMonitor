@@ -27,6 +27,8 @@ public sealed class MainWindowViewModel : ObservableObject
     private IReadOnlyList<DetailViewModel> _details = [];
     private bool _isDetailsVisible;
     private bool _isWebServerEnabled;
+    private bool _isTrayIconEnabled = true;
+    private bool _isMinimizeToTray;
     private bool _isWebServerLocalOnly = true;
     private int _webServerPort = 8085;
     private string _webServerStatus = string.Empty;
@@ -132,6 +134,8 @@ public sealed class MainWindowViewModel : ObservableObject
         WebServerPort = settings.WebServerPort is > 0 and < 65536 ? settings.WebServerPort : 8085;
         IsWebServerLocalOnly = settings.IsWebServerLocalOnly;
         IsWebServerEnabled = settings.IsWebServerEnabled;
+        IsTrayIconEnabled = settings.IsTrayIconEnabled;
+        IsMinimizeToTray = settings.IsMinimizeToTray;
         IsDashboardVisible = settings.IsDashboardVisible;
         Tiles.Clear();
 
@@ -158,6 +162,8 @@ public sealed class MainWindowViewModel : ObservableObject
             ShowAdvanced = ShowAdvanced,
             IsDetailsVisible = IsDetailsVisible,
             IsWebServerEnabled = IsWebServerEnabled,
+            IsTrayIconEnabled = IsTrayIconEnabled,
+            IsMinimizeToTray = IsMinimizeToTray,
             IsWebServerLocalOnly = IsWebServerLocalOnly,
             WebServerPort = WebServerPort,
             IsDashboardVisible = IsDashboardVisible,
@@ -541,6 +547,50 @@ public sealed class MainWindowViewModel : ObservableObject
             else
                 tile.Update(null, null);
         }
+    }
+
+    /// <summary>
+    /// Gets or sets whether an icon in the notification area shows the pinned sensors.
+    /// </summary>
+    public bool IsTrayIconEnabled
+    {
+        get { return _isTrayIconEnabled; }
+        set
+        {
+            if (SetProperty(ref _isTrayIconEnabled, value))
+            {
+                SettingsChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether minimizing hides the window to the notification area.
+    /// </summary>
+    public bool IsMinimizeToTray
+    {
+        get { return _isMinimizeToTray; }
+        set
+        {
+            if (SetProperty(ref _isMinimizeToTray, value))
+            {
+                SettingsChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets a short text with the values of the pinned sensors, for the tooltip of the notification area icon.
+    /// </summary>
+    /// <param name="maxLength">The maximum length; Windows cuts tooltips of notification icons at 127 characters.</param>
+    /// <returns>The text, or the application name if nothing is pinned.</returns>
+    public string GetTrayText(int maxLength = 127)
+    {
+        string text = Tiles.Count == 0
+            ? LanguageResources.ApplicationTitle
+            : string.Join("\n", Tiles.Select(tile => tile.Name + ": " + tile.Value));
+
+        return text.Length <= maxLength ? text : text.Substring(0, maxLength - 1) + "\u2026";
     }
 
     /// <summary>

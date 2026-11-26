@@ -261,7 +261,8 @@ internal sealed class IntelCpu : GenericCpu
 
                         default:
                             _microArchitecture = MicroArchitecture.Unknown;
-                            tjMax = Floats(100);
+                            // Newer CPUs report TjMax in IA32_TEMPERATURE_TARGET; GetTjMaxFromMsr falls back to 100 if it cannot be read.
+                            tjMax = GetTjMaxFromMsr();
                             break;
                     }
                 }
@@ -289,7 +290,8 @@ internal sealed class IntelCpu : GenericCpu
                 break;
             default:
                 _microArchitecture = MicroArchitecture.Unknown;
-                tjMax = Floats(100);
+                // Newer CPUs report TjMax in IA32_TEMPERATURE_TARGET; GetTjMaxFromMsr falls back to 100 if it cannot be read.
+                tjMax = GetTjMaxFromMsr();
                 break;
         }
 
@@ -551,7 +553,8 @@ internal sealed class IntelCpu : GenericCpu
         float[] result = new float[_coreCount];
         for (int i = 0; i < _coreCount; i++)
         {
-            if (_pawnModule.ReadMsr(IA32_TEMPERATURE_TARGET, out uint eax, out uint _, _cpuId[i][0].Affinity))
+            // A TjMax of 0 means the field is not filled in, so 100 is used like for a failed read.
+            if (_pawnModule.ReadMsr(IA32_TEMPERATURE_TARGET, out uint eax, out uint _, _cpuId[i][0].Affinity) && ((eax >> 16) & 0xFF) != 0)
                 result[i] = (eax >> 16) & 0xFF;
             else
                 result[i] = 100;
