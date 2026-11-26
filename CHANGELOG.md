@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- The voltage sensors of the 12VHPWR pins on ASUS Astral graphics cards no longer share an identifier with the GPU core voltage. Reported in upstream issue 2615.
+- The sensor mapping no longer fails when two temperatures share an identifier.
+
 ### Adopted from upstream
 
 Changes taken from open pull requests of the original LibreHardwareMonitor project. Credit goes to their authors.
