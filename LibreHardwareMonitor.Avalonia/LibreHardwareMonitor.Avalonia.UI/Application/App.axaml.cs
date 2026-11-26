@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using LibreHardwareMonitor.Avalonia.Monitoring.Services;
+using LibreHardwareMonitor.Avalonia.Mvvm.Services;
 using LibreHardwareMonitor.Avalonia.Mvvm.ViewModels;
 using LibreHardwareMonitor.Avalonia.UI.MockData;
 using LibreHardwareMonitor.Avalonia.UI.Services;
@@ -51,6 +52,13 @@ public sealed partial class App : AvaloniaApplication
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             MainWindowViewModel viewModel = new();
+            string settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "LibreHardwareMonitor",
+                "LibreHardwareMonitor.Avalonia.json");
+
+            viewModel.ApplySettings(ViewSettings.Load(settingsPath));
+            viewModel.SettingsChanged += () => viewModel.GetSettings().Save(settingsPath);
+
             desktop.MainWindow = new MainWindow(viewModel);
 
             _monitor = new SensorMonitor();
