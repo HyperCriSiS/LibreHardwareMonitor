@@ -259,6 +259,9 @@
   <data name="ToggleAllHint" xml:space="preserve">
     <value>Alles darunter auf- oder zuklappen</value>
   </data>
+  <data name="GroupMultipliers" xml:space="preserve">
+    <value>Multiplikatoren</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Spannungen</value>
   </data>
@@ -296,7 +299,7 @@
     <value>Daten</value>
   </data>
   <data name="GroupFactors" xml:space="preserve">
-    <value>Faktoren</value>
+    <value>Kennzahlen</value>
   </data>
   <data name="GroupFrequencies" xml:space="preserve">
     <value>Frequenzen</value>

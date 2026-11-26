@@ -259,6 +259,9 @@
   <data name="ToggleAllHint" xml:space="preserve">
     <value>Expand or collapse everything below</value>
   </data>
+  <data name="GroupMultipliers" xml:space="preserve">
+    <value>Multipliers</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Voltages</value>
   </data>
@@ -296,7 +299,7 @@
     <value>Data</value>
   </data>
   <data name="GroupFactors" xml:space="preserve">
-    <value>Factors</value>
+    <value>Counts and ratios</value>
   </data>
   <data name="GroupFrequencies" xml:space="preserve">
     <value>Frequencies</value>

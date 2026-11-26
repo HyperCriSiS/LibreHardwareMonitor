@@ -258,7 +258,7 @@ public sealed class SensorMonitor : IDisposable
             }
 
             children.Add(new SensorTreeNodeSnapshot(hardware.Identifier + "/" + group.Key,
-                SensorCategoryName.GetName(group.Key),
+                SensorCategoryName.GetName(group.Key, hardware.HardwareType),
                 SensorTreeNodeKind.Category,
                 null,
                 group.Key,
