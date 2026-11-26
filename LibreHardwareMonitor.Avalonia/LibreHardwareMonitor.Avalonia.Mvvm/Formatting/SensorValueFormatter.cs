@@ -12,6 +12,11 @@ namespace LibreHardwareMonitor.Avalonia.Mvvm.Formatting;
 public static class SensorValueFormatter
 {
     /// <summary>
+    /// Gets or sets whether temperatures are shown in degrees Fahrenheit instead of Celsius.
+    /// </summary>
+    public static bool UseFahrenheit { get; set; }
+
+    /// <summary>
     /// Formats a sensor value with the unit for its measurement type.
     /// </summary>
     /// <param name="sensorType">The sensor measurement type.</param>
@@ -42,6 +47,7 @@ public static class SensorValueFormatter
             case SensorType.Current: format = LanguageResources.ValueCurrentFormat; break;
             case SensorType.Power: format = LanguageResources.ValuePowerFormat; break;
             case SensorType.Clock: format = LanguageResources.ValueClockFormat; break;
+            case SensorType.Temperature when UseFahrenheit: return string.Format(CultureInfo.CurrentCulture, LanguageResources.ValueTemperatureFahrenheitFormat, (value.Value * 1.8) + 32);
             case SensorType.Temperature: format = LanguageResources.ValueTemperatureFormat; break;
             case SensorType.Load:
             case SensorType.Control:

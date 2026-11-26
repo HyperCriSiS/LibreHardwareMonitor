@@ -115,6 +115,12 @@
   <data name="TrayExit" xml:space="preserve">
     <value>Beenden</value>
   </data>
+  <data name="UseFahrenheit" xml:space="preserve">
+    <value>Temperaturen in °F</value>
+  </data>
+  <data name="ValueTemperatureFahrenheitFormat" xml:space="preserve">
+    <value>{0:F1} °F</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Sensoren werden gesucht...</value>
   </data>
