@@ -91,6 +91,12 @@
   <data name="DashboardEmpty" xml:space="preserve">
     <value>Nothing pinned yet. Right-click a sensor in the tree and choose "Pin to dashboard".</value>
   </data>
+  <data name="HistoryLabel" xml:space="preserve">
+    <value>History (last 5 minutes)</value>
+  </data>
+  <data name="HistoryRangeFormat" xml:space="preserve">
+    <value>Lowest {0}, highest {1}</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Searching for sensors...</value>
   </data>

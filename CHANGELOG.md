@@ -4,6 +4,7 @@
 
 ### Added
 
+- A history of the selected sensor in the details pane: the last five minutes as a line with the lowest and highest reading.
 - The sensor mapping can rename a sensor right away, starting with a suggested name, and hide inputs that look unconnected.
 - A dashboard: pin sensors from the tree (context menu) and see them as tiles with the current value and the last minute as a line. Pinned sensors and the view are kept between sessions.
 - The MSI MPG Ai1300TS PCIE5 power supply: rail currents, the twelve 12V-2x6 pin currents (GPU Safeguard+), output power, efficiency, temperature and fan. Data from upstream issues 2647 and 2361.

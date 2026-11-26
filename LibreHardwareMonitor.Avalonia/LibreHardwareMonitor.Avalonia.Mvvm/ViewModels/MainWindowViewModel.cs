@@ -26,6 +26,9 @@ public sealed class MainWindowViewModel : ObservableObject
     private SensorTreeNodeViewModel _selectedNode;
     private IReadOnlyList<DetailViewModel> _details = [];
     private bool _isDetailsVisible;
+    private readonly Dictionary<string, Queue<float>> _histories = new();
+    private IReadOnlyList<float> _selectedHistory = [];
+    private string _selectedHistoryRange = string.Empty;
     private bool _isDashboardVisible;
     private string _filterText = string.Empty;
     private readonly HashSet<string> _hiddenSensors = new();
@@ -405,7 +408,81 @@ public sealed class MainWindowViewModel : ObservableObject
             if (SetProperty(ref _selectedNode, value))
             {
                 UpdateDetails();
+                UpdateSelectedHistory();
             }
+        }
+    }
+
+    /// <summary>
+    /// The number of readings kept per sensor for the history in the details pane, one per poll.
+    /// </summary>
+    public const int SensorHistoryLength = 300;
+
+    /// <summary>
+    /// Gets the recent readings of the selected sensor, oldest first, or an empty list if no sensor is selected.
+    /// </summary>
+    public IReadOnlyList<float> SelectedHistory
+    {
+        get { return _selectedHistory; }
+        private set { SetProperty(ref _selectedHistory, value); }
+    }
+
+    /// <summary>
+    /// Gets the lowest and highest reading of the selected history as text.
+    /// </summary>
+    public string SelectedHistoryRange
+    {
+        get { return _selectedHistoryRange; }
+        private set { SetProperty(ref _selectedHistoryRange, value); }
+    }
+
+    /// <summary>
+    /// Adds the readings of a snapshot to the history of each sensor.
+    /// </summary>
+    private void RecordHistories(SensorTreeSnapshot snapshot)
+    {
+        void Record(SensorTreeNodeSnapshot node)
+        {
+            if (node.Kind == SensorTreeNodeKind.Sensor && node.Value is { } value && !float.IsNaN(value))
+            {
+                if (!_histories.TryGetValue(node.Identifier, out Queue<float> history))
+                {
+                    history = new Queue<float>();
+                    _histories.Add(node.Identifier, history);
+                }
+
+                history.Enqueue(value);
+
+                if (history.Count > SensorHistoryLength)
+                    history.Dequeue();
+            }
+
+            foreach (SensorTreeNodeSnapshot child in node.Children)
+                Record(child);
+        }
+
+        foreach (SensorTreeNodeSnapshot root in snapshot.Roots)
+            Record(root);
+    }
+
+    /// <summary>
+    /// Shows the history of the selected sensor.
+    /// </summary>
+    private void UpdateSelectedHistory()
+    {
+        if (SelectedNode is { Kind: SensorTreeNodeKind.Sensor } node && _histories.TryGetValue(node.Identifier, out Queue<float> history) && history.Count > 1)
+        {
+            float[] values = history.ToArray();
+            SelectedHistory = values;
+            SelectedHistoryRange = string.Format(CultureInfo.CurrentCulture,
+                LanguageResources.HistoryRangeFormat,
+                Formatting.SensorValueFormatter.Format(node.Snapshot.SensorType, values.Min()),
+                Formatting.SensorValueFormatter.Format(node.Snapshot.SensorType, values.Max()));
+        }
+        else
+        {
+            SelectedHistory = [];
+            SelectedHistoryRange = string.Empty;
         }
     }
 
@@ -554,7 +631,9 @@ public sealed class MainWindowViewModel : ObservableObject
     {
         _snapshot = snapshot;
         Mapping.Record(snapshot);
+        RecordHistories(snapshot);
         UpdateTree();
+        UpdateSelectedHistory();
         UpdateDashboard();
 
         string format = snapshot.Roots.Count > 0 && snapshot.Roots[0].Children.Count == 0
