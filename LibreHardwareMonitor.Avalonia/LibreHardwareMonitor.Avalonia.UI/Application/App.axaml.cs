@@ -28,6 +28,7 @@ public sealed partial class App : AvaloniaApplication
     /// </summary>
     private SensorMonitor _monitor;
     private SensorWebServer _webServer;
+    private GadgetWindow _gadget;
     private TrayIcon _trayIcon;
     private volatile SensorTreeSnapshot _lastSnapshot;
     private (bool Enabled, bool LocalOnly, int Port) _webServerConfiguration;
@@ -85,6 +86,26 @@ public sealed partial class App : AvaloniaApplication
         };
         _trayIcon.Clicked += (_, _) => (desktop.MainWindow as MainWindow)?.Restore();
         TrayIcon.SetIcons(this, new TrayIcons { _trayIcon });
+    }
+
+    /// <summary>
+    /// Shows or closes the gadget to match the settings.
+    /// </summary>
+    /// <param name="viewModel">The main window state.</param>
+    private void UpdateGadget(MainWindowViewModel viewModel)
+    {
+        if (viewModel.IsGadgetVisible == (_gadget != null))
+            return;
+
+        if (_gadget != null)
+        {
+            _gadget.Close();
+            _gadget = null;
+            return;
+        }
+
+        _gadget = new GadgetWindow(viewModel);
+        _gadget.Show();
     }
 
     /// <summary>
@@ -162,6 +183,8 @@ public sealed partial class App : AvaloniaApplication
             };
             viewModel.SettingsChanged += () => UpdateWebServer(viewModel);
             UpdateWebServer(viewModel);
+            viewModel.SettingsChanged += () => UpdateGadget(viewModel);
+            UpdateGadget(viewModel);
             viewModel.SettingsChanged += () => UpdateTrayIcon(viewModel, desktop);
             UpdateTrayIcon(viewModel, desktop);
             _monitor.ErrorOccurred += message => Dispatcher.UIThread.Post(() => viewModel.ShowError(message));
@@ -170,6 +193,7 @@ public sealed partial class App : AvaloniaApplication
             {
                 _monitor.Dispose();
                 _webServer?.Dispose();
+                viewModel.GetSettings().Save(settingsPath);
                 _trayIcon?.Dispose();
             };
 

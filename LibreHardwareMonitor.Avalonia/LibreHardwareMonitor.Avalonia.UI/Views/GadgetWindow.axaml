@@ -1,0 +1,57 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<Window x:Class="LibreHardwareMonitor.Avalonia.UI.Views.GadgetWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:language="using:LibreHardwareMonitor.Avalonia.Localization.Resources"
+        xmlns:vm="using:LibreHardwareMonitor.Avalonia.Mvvm.ViewModels"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{x:Static language:Resources.GadgetTitle}"
+        Icon="{StaticResource LibreHardwareMonitorWindowIcon}"
+        SystemDecorations="None"
+        Topmost="True"
+        ShowInTaskbar="False"
+        CanResize="False"
+        SizeToContent="WidthAndHeight"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+
+    <Border Padding="10,8"
+            CornerRadius="6"
+            Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            BorderThickness="1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            PointerPressed="OnPointerPressed">
+        <Border.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="{x:Static language:Resources.GadgetClose}"
+                          Click="OnCloseClick"/>
+            </ContextMenu>
+        </Border.ContextMenu>
+        <StackPanel MinWidth="160">
+            <TextBlock Opacity="0.7"
+                       MaxWidth="240"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding !HasTiles}"
+                       Text="{x:Static language:Resources.GadgetEmpty}"/>
+            <ItemsControl ItemsSource="{Binding Tiles}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DashboardTileViewModel">
+                        <Grid ColumnDefinitions="*,Auto"
+                              Margin="0,1">
+                            <TextBlock Grid.Column="0"
+                                       Margin="0,0,16,0"
+                                       MaxWidth="200"
+                                       TextTrimming="CharacterEllipsis"
+                                       Text="{Binding Name}"/>
+                            <TextBlock Grid.Column="1"
+                                       FontWeight="SemiBold"
+                                       Text="{Binding Value}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+
+</Window>

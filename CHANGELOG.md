@@ -5,6 +5,7 @@
 ### Added
 
 - A hardware report for support requests (Options, Create report): shown for review first, then saved or copied. Serial numbers, asset tags, UUIDs, MAC addresses, the computer name and the user name are removed.
+- A gadget (Options): a small window that stays on top with the pinned sensors; drag it anywhere, its place is kept. Asked for in upstream issue 1768 and others.
 - Temperatures in degrees Fahrenheit (Options), in the tree, the details, the dashboard and the tray tooltip. The web server keeps Celsius like the raw values.
 - A history of the selected sensor in the details pane: the last five minutes as a line with the lowest and highest reading.
 - An icon in the notification area with the pinned sensors as tooltip, a menu to show the window or exit, and an option to minimize to the notification area.
