@@ -74,6 +74,8 @@
                                       Content="{x:Static language:Resources.MinimizeToTray}"
                                       IsEnabled="{Binding IsTrayIconEnabled}"
                                       IsChecked="{Binding IsMinimizeToTray}"/>
+                            <CheckBox Content="{x:Static language:Resources.GadgetEnabled}"
+                                      IsChecked="{Binding IsGadgetVisible}"/>
                             <CheckBox Content="{x:Static language:Resources.WebServerEnabled}"
                                       IsChecked="{Binding IsWebServerEnabled}"/>
                             <CheckBox Margin="24,0,0,0"

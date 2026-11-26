@@ -121,6 +121,18 @@
   <data name="HistoryRangeFormat" xml:space="preserve">
     <value>Lowest {0}, highest {1}</value>
   </data>
+  <data name="GadgetEnabled" xml:space="preserve">
+    <value>Gadget with the pinned sensors, always on top</value>
+  </data>
+  <data name="GadgetTitle" xml:space="preserve">
+    <value>LibreHardwareMonitor gadget</value>
+  </data>
+  <data name="GadgetClose" xml:space="preserve">
+    <value>Close gadget</value>
+  </data>
+  <data name="GadgetEmpty" xml:space="preserve">
+    <value>Pin sensors in the tree to show them here.</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Searching for sensors...</value>
   </data>

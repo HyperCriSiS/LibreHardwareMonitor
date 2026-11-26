@@ -121,6 +121,18 @@
   <data name="HistoryRangeFormat" xml:space="preserve">
     <value>Niedrigster {0}, höchster {1}</value>
   </data>
+  <data name="GadgetEnabled" xml:space="preserve">
+    <value>Gadget mit den angehefteten Sensoren, immer im Vordergrund</value>
+  </data>
+  <data name="GadgetTitle" xml:space="preserve">
+    <value>LibreHardwareMonitor-Gadget</value>
+  </data>
+  <data name="GadgetClose" xml:space="preserve">
+    <value>Gadget schließen</value>
+  </data>
+  <data name="GadgetEmpty" xml:space="preserve">
+    <value>Sensoren im Baum anheften, um sie hier zu zeigen.</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Sensoren werden gesucht...</value>
   </data>
