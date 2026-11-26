@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: MPL-2.0
 
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using LibreHardwareMonitor.Avalonia.Monitoring.Models;
 using LibreHardwareMonitor.Hardware;
@@ -19,19 +20,37 @@ public sealed class SensorMonitor : IDisposable
     /// <summary>
     /// Owns the hardware devices queried by this monitor.
     /// </summary>
-    private readonly Computer _computer = new()
+    private readonly Computer _computer;
+
+    /// <summary>
+    /// Stores custom names, or null if they are not kept between sessions.
+    /// </summary>
+    private readonly JsonSettings _settings;
+
+    /// <summary>
+    /// Holds renames requested by the user until the polling thread applies them.
+    /// </summary>
+    private readonly ConcurrentQueue<(string Identifier, string Name)> _renames = new();
+
+    /// <summary>
+    /// Initializes the monitor.
+    /// </summary>
+    /// <param name="settings">Stores custom names between sessions, or null to keep them only in memory.</param>
+    public SensorMonitor(JsonSettings settings = null)
     {
-        IsBatteryEnabled = true,
-        IsControllerEnabled = true,
-        IsCpuEnabled = true,
-        IsGpuEnabled = true,
-        IsMemoryEnabled = true,
-        IsMotherboardEnabled = true,
-        IsNetworkEnabled = true,
-        IsPowerMonitorEnabled = true,
-        IsPsuEnabled = true,
-        IsStorageEnabled = true
-    };
+        _settings = settings;
+        _computer = settings == null ? new Computer() : new Computer(settings);
+        _computer.IsBatteryEnabled = true;
+        _computer.IsControllerEnabled = true;
+        _computer.IsCpuEnabled = true;
+        _computer.IsGpuEnabled = true;
+        _computer.IsMemoryEnabled = true;
+        _computer.IsMotherboardEnabled = true;
+        _computer.IsNetworkEnabled = true;
+        _computer.IsPowerMonitorEnabled = true;
+        _computer.IsPsuEnabled = true;
+        _computer.IsStorageEnabled = true;
+    }
 
     /// <summary>
     /// Keeps properties, because reading them can access the device.
@@ -72,6 +91,54 @@ public sealed class SensorMonitor : IDisposable
     }
 
     /// <summary>
+    /// Renames a sensor or hardware device. The name is applied on the polling thread and stored in the settings.
+    /// </summary>
+    /// <param name="identifier">The identifier of the sensor or hardware.</param>
+    /// <param name="name">The new name, or empty to restore the default name.</param>
+    public void Rename(string identifier, string name)
+    {
+        _renames.Enqueue((identifier, name?.Trim() ?? string.Empty));
+    }
+
+    /// <summary>
+    /// Applies the requested renames.
+    /// </summary>
+    private void ApplyRenames()
+    {
+        while (_renames.TryDequeue(out (string Identifier, string Name) rename))
+        {
+            foreach (IHardware hardware in _computer.Hardware)
+            {
+                Rename(hardware, rename.Identifier, rename.Name);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Renames the hardware, one of its sensors or one of its child devices with the given identifier.
+    /// </summary>
+    private static void Rename(IHardware hardware, string identifier, string name)
+    {
+        if (hardware.Identifier.ToString() == identifier)
+        {
+            hardware.Name = name;
+        }
+
+        foreach (ISensor sensor in hardware.Sensors)
+        {
+            if (sensor.Identifier.ToString() == identifier)
+            {
+                sensor.Name = name;
+            }
+        }
+
+        foreach (IHardware subHardware in hardware.SubHardware)
+        {
+            Rename(subHardware, identifier, name);
+        }
+    }
+
+    /// <summary>
     /// Requests cancellation of the polling loop.
     /// </summary>
     public void Dispose()
@@ -97,7 +164,9 @@ public sealed class SensorMonitor : IDisposable
                     UpdateHardware(hardware);
                 }
 
+                ApplyRenames();
                 SnapshotAvailable?.Invoke(CreateSnapshot());
+                _settings?.SaveIfChanged();
 
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
@@ -112,6 +181,7 @@ public sealed class SensorMonitor : IDisposable
         finally
         {
             _computer.Close();
+            _settings?.SaveIfChanged();
         }
     }
 

@@ -77,6 +77,9 @@
                            MinWidth="300">
             <tree:TreeDataGrid.ContextMenu>
                 <ContextMenu>
+                    <MenuItem Header="{x:Static language:Resources.Rename}"
+                              InputGesture="F2"
+                              Click="OnRenameClick"/>
                     <MenuItem Header="{x:Static language:Resources.HideSensors}"
                               InputGesture="Delete"
                               Click="OnHideClick"/>

@@ -47,6 +47,52 @@ public sealed class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Occurs when the user renames a sensor or hardware. The arguments are the identifier and the new name,
+    /// which is empty to restore the default name.
+    /// </summary>
+    public event Action<string, string> RenameRequested;
+
+    /// <summary>
+    /// Gets whether a node can be renamed.
+    /// </summary>
+    /// <param name="node">The node to check.</param>
+    /// <returns>True for sensors and hardware.</returns>
+    public static bool CanRename(SensorTreeNodeViewModel node)
+    {
+        return node?.Kind is SensorTreeNodeKind.Sensor or SensorTreeNodeKind.Hardware;
+    }
+
+    /// <summary>
+    /// Renames a sensor or hardware.
+    /// </summary>
+    /// <param name="node">The node to rename.</param>
+    /// <param name="name">The new name, or empty to restore the default name.</param>
+    public void Rename(SensorTreeNodeViewModel node, string name)
+    {
+        if (CanRename(node))
+        {
+            RenameRequested?.Invoke(GetSourceIdentifier(node), name ?? string.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Gets the identifier that the hardware library uses for a node, also when the node is a copy in another grouping.
+    /// </summary>
+    /// <param name="node">The node.</param>
+    /// <returns>The library identifier.</returns>
+    private static string GetSourceIdentifier(SensorTreeNodeViewModel node)
+    {
+        // Hardware grouped by sensor type is copied as "type/<hardware>/<sensor type>".
+        if (node.Kind == SensorTreeNodeKind.Hardware && node.Identifier.StartsWith("type/", StringComparison.Ordinal))
+        {
+            string identifier = node.Identifier.Substring("type/".Length);
+            return identifier.Substring(0, identifier.LastIndexOf('/'));
+        }
+
+        return node.Identifier;
+    }
+
+    /// <summary>
     /// Gets the sensor mapping assistant.
     /// </summary>
     public SensorMappingViewModel Mapping { get; } = new();

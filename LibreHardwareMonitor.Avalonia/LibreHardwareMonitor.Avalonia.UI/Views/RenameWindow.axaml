@@ -1,0 +1,32 @@
+﻿<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<Window x:Class="LibreHardwareMonitor.Avalonia.UI.Views.RenameWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:language="using:LibreHardwareMonitor.Avalonia.Localization.Resources"
+        Title="{x:Static language:Resources.RenameTitle}"
+        Icon="{StaticResource LibreHardwareMonitorWindowIcon}"
+        Width="380"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="16" Spacing="12">
+        <TextBox x:Name="NameBox"
+                 AutomationProperties.Name="{x:Static language:Resources.RenameTitle}"/>
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button Content="{x:Static language:Resources.RenameDefault}"
+                    Click="OnDefaultClick"/>
+            <Button Content="{x:Static language:Resources.RenameOk}"
+                    IsDefault="True"
+                    Click="OnOkClick"/>
+            <Button Content="{x:Static language:Resources.RenameCancel}"
+                    IsCancel="True"
+                    Click="OnCancelClick"/>
+        </StackPanel>
+    </StackPanel>
+
+</Window>
