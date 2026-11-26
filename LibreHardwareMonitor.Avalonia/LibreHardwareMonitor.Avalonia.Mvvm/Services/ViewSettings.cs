@@ -57,6 +57,11 @@ public sealed class ViewSettings
     public bool IsMinimizeToTray { get; set; }
 
     /// <summary>
+    /// Gets or sets whether temperatures are shown in degrees Fahrenheit.
+    /// </summary>
+    public bool UseFahrenheit { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the web server with data.json runs.
     /// </summary>
     public bool IsWebServerEnabled { get; set; }
