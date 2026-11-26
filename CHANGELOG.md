@@ -5,6 +5,7 @@
 ### Added
 
 - The details pane can be made wider or narrower by dragging its left edge; the width is kept between sessions.
+- Board files: JSON files in Documents\LibreHardwareMonitor\Boards name or hide sensors of a motherboard without a new release; your own renames always win. See docs/board-files.md.
 - CSV logging of the pinned sensors (Options), one line per poll in Documents\LibreHardwareMonitor\Logs, with a new file per day or when the pinned sensors change. No file is created while nothing is pinned, as upstream PR 2586 by Metaray proposed for the classic logger.
 - A hardware report for support requests (Options, Create report): shown for review first, then saved or copied. Serial numbers, asset tags, UUIDs, MAC addresses, the computer name and the user name are removed.
 - A gadget (Options): a small window that stays on top with the pinned sensors; drag it anywhere, its place is kept. Asked for in upstream issue 1768 and others.
