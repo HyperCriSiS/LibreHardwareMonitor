@@ -5,6 +5,7 @@
 ### Added
 
 - CSV logging of the pinned sensors (Options), one line per poll in Documents\LibreHardwareMonitor\Logs, with a new file per day or when the pinned sensors change. No file is created while nothing is pinned, as upstream PR 2586 by Metaray proposed for the classic logger.
+- Temperatures in degrees Fahrenheit (Options), in the tree, the details, the dashboard and the tray tooltip. The web server keeps Celsius like the raw values.
 - A history of the selected sensor in the details pane: the last five minutes as a line with the lowest and highest reading.
 - An icon in the notification area with the pinned sensors as tooltip, a menu to show the window or exit, and an option to minimize to the notification area.
 - A read-only web server for other apps (Options, off by default): data.json in the format of the classic app on port 8085, only from this computer unless that option is turned off. Asked for in upstream issue 1035 and others.

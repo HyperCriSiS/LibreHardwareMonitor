@@ -121,6 +121,12 @@
   <data name="HistoryRangeFormat" xml:space="preserve">
     <value>Lowest {0}, highest {1}</value>
   </data>
+  <data name="UseFahrenheit" xml:space="preserve">
+    <value>Temperatures in °F</value>
+  </data>
+  <data name="ValueTemperatureFahrenheitFormat" xml:space="preserve">
+    <value>{0:F1} °F</value>
+  </data>
   <data name="LoggingEnabled" xml:space="preserve">
     <value>Write the pinned sensors to CSV files</value>
   </data>
