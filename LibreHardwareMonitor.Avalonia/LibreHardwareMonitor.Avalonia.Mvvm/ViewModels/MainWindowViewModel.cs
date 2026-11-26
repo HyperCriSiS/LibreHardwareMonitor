@@ -47,6 +47,11 @@ public sealed class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Gets the sensor mapping assistant.
+    /// </summary>
+    public SensorMappingViewModel Mapping { get; } = new();
+
+    /// <summary>
     /// Occurs when a view choice that is kept between sessions changes.
     /// </summary>
     public event Action SettingsChanged;
@@ -278,6 +283,7 @@ public sealed class MainWindowViewModel : ObservableObject
     public void Apply(SensorTreeSnapshot snapshot)
     {
         _snapshot = snapshot;
+        Mapping.Record(snapshot);
         UpdateTree();
 
         string format = snapshot.Roots.Count > 0 && snapshot.Roots[0].Children.Count == 0

@@ -74,6 +74,19 @@ public sealed partial class MainWindow : DecoratedWindow
     }
 
     /// <summary>
+    /// Opens the sensor mapping assistant.
+    /// </summary>
+    /// <param name="sender">The button.</param>
+    /// <param name="e">The click event.</param>
+    private void OnMappingClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            new SensorMappingWindow(viewModel.Mapping).Show(this);
+        }
+    }
+
+    /// <summary>
     /// Keeps the set of selected rows up to date.
     /// </summary>
     /// <param name="sender">The sensor tree.</param>
