@@ -642,8 +642,21 @@ internal sealed class SuperIOHardware : Hardware
                         t.Add(new Temperature("VRM MOS", 2));
                         t.Add(new Temperature("PCH", 3));
                         t.Add(new Temperature("CPU Socket", 4));
-                        t.Add(new Temperature("PCIe x1", 5));
-                        t.Add(new Temperature("M2 #1", 6));
+
+                        if (model == Model.Z690_UNIFY)
+                        {
+                            // Compared with AIDA64 and HWiNFO in upstream issue 1306.
+                            t.Add(new Temperature("T Sensor #1", 5));
+                            t.Add(new Temperature("T Sensor #2", 6));
+                            t.Add(new Temperature("PCIe #1", 7));
+                            t.Add(new Temperature("M2 #1", 8));
+                            t.Add(new Temperature("PCIe #2", 9));
+                        }
+                        else
+                        {
+                            t.Add(new Temperature("PCIe x1", 5));
+                            t.Add(new Temperature("M2 #1", 6));
+                        }
 
                         f.Add(new Fan("CPU Fan", 0));
                         f.Add(new Fan("Pump Fan", 1));

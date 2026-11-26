@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+
+- Temperature names for the MSI MEG Z690 Unify, including both T sensors, PCIe and M.2. Data from upstream issue 1306.
 ### Fixed
 
 - The voltage sensors of the 12VHPWR pins on ASUS Astral graphics cards no longer share an identifier with the GPU core voltage. Reported in upstream issue 2615.
