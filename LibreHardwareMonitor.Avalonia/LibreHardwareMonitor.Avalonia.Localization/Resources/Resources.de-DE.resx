@@ -103,6 +103,18 @@
   <data name="WebServerFailedFormat" xml:space="preserve">
     <value>Der Webserver konnte nicht starten: {0}</value>
   </data>
+  <data name="TrayIconEnabled" xml:space="preserve">
+    <value>Symbol im Infobereich (angeheftete Sensoren als Tooltip)</value>
+  </data>
+  <data name="MinimizeToTray" xml:space="preserve">
+    <value>In den Infobereich minimieren</value>
+  </data>
+  <data name="TrayShow" xml:space="preserve">
+    <value>Anzeigen</value>
+  </data>
+  <data name="TrayExit" xml:space="preserve">
+    <value>Beenden</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Sensoren werden gesucht...</value>
   </data>
