@@ -223,6 +223,17 @@ internal sealed class SuperIOHardware : Hardware
         f = new List<Fan>();
         c = new List<Control>();
 
+        // Boards in the data file get their sensor lists from it. The file is generated from the code below and checked
+        // against it; boards that need their own read functions, a mutex or GPIO access are not in the file.
+        if (SuperIOBoardData.TryGet(superIO.Chip, manufacturer, model, superIOIndex, out SuperIOBoardData.Entry entry))
+        {
+            v = new List<Voltage>(entry.Voltages);
+            t = new List<Temperature>(entry.Temperatures);
+            f = new List<Fan>(entry.Fans);
+            c = new List<Control>(entry.Controls);
+            return;
+        }
+
         switch (superIO.Chip)
         {
             case Chip.IT8705F:
