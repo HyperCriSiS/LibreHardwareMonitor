@@ -494,7 +494,9 @@ internal sealed class IntelCpu : GenericCpu
 
                 for (int i = 0; i < _energyStatusMsrs.Length; i++)
                 {
-                    if (!_pawnModule.ReadMsr(_energyStatusMsrs[i], out eax, out uint _))
+                    // Energy counters exist per package, so read them on this package. On systems with several CPUs an
+                    // unpinned read can come from another package and turn the difference into an absurd power.
+                    if (!_pawnModule.ReadMsr(_energyStatusMsrs[i], out eax, out uint _, _cpuId[0][0].Affinity))
                         continue;
 
                     // Don't show the "GPU Graphics" sensor on windows, it will show up under the GPU instead.
@@ -701,7 +703,7 @@ internal sealed class IntelCpu : GenericCpu
                 if (sensor == null)
                     continue;
 
-                if (!_pawnModule.ReadMsr(_energyStatusMsrs[sensor.Index], out eax, out _))
+                if (!_pawnModule.ReadMsr(_energyStatusMsrs[sensor.Index], out eax, out _, _cpuId[0][0].Affinity))
                     continue;
 
                 DateTime time = DateTime.UtcNow;
