@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: MPL-2.0
 
+using System.Runtime.CompilerServices;
 using LibreHardwareMonitor.Avalonia.Monitoring.Models;
 using LibreHardwareMonitor.Hardware;
 
@@ -31,6 +32,11 @@ public sealed class SensorMonitor : IDisposable
         IsPsuEnabled = true,
         IsStorageEnabled = true
     };
+
+    /// <summary>
+    /// Keeps properties, because reading them can access the device.
+    /// </summary>
+    private readonly ConditionalWeakTable<IHardware, IReadOnlyDictionary<string, string>> _properties = new();
 
     /// <summary>
     /// Tracks the running polling task so monitoring starts only once.
@@ -149,7 +155,7 @@ public sealed class SensorMonitor : IDisposable
     /// </summary>
     /// <param name="hardware">The hardware device to capture.</param>
     /// <returns>The captured hardware tree node.</returns>
-    private static SensorTreeNodeSnapshot CreateHardwareNode(IHardware hardware)
+    private SensorTreeNodeSnapshot CreateHardwareNode(IHardware hardware)
     {
         List<SensorTreeNodeSnapshot> children = new();
 
@@ -198,6 +204,25 @@ public sealed class SensorMonitor : IDisposable
             null,
             null,
             null,
-            children);
+            children,
+            _properties.GetValue(hardware, ReadProperties));
+    }
+
+    /// <summary>
+    /// Reads the static properties of a hardware device.
+    /// </summary>
+    /// <param name="hardware">The hardware device to query.</param>
+    /// <returns>The properties, which are empty if the device cannot be read.</returns>
+    private static IReadOnlyDictionary<string, string> ReadProperties(IHardware hardware)
+    {
+        try
+        {
+            return new Dictionary<string, string>(hardware.Properties);
+        }
+        catch (Exception)
+        {
+            // Not retried, because reading could block a busy device on every update.
+            return new Dictionary<string, string>();
+        }
     }
 }

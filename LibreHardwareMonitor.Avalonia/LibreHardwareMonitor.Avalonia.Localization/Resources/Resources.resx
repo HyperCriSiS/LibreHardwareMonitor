@@ -94,6 +94,24 @@
   <data name="GroupingSensorType" xml:space="preserve">
     <value>Sensor type</value>
   </data>
+  <data name="DetailsLabel" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="DetailsEmpty" xml:space="preserve">
+    <value>Select hardware or a sensor.</value>
+  </data>
+  <data name="DetailHardware" xml:space="preserve">
+    <value>Hardware</value>
+  </data>
+  <data name="DetailSensor" xml:space="preserve">
+    <value>Sensor</value>
+  </data>
+  <data name="DetailCategory" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="DetailIdentifier" xml:space="preserve">
+    <value>Identifier</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Voltages</value>
   </data>
