@@ -72,6 +72,11 @@ public sealed class ViewSettings
     public int[] GadgetPosition { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the pinned sensors are written to CSV files.
+    /// </summary>
+    public bool IsLoggingEnabled { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the web server with data.json runs.
     /// </summary>
     public bool IsWebServerEnabled { get; set; }

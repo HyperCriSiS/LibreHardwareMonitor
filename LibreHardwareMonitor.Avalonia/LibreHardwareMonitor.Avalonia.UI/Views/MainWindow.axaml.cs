@@ -113,6 +113,15 @@ public sealed partial class MainWindow : DecoratedWindow
     }
 
     /// <summary>
+    /// Opens the folder with the CSV logs in the file manager.
+    /// </summary>
+    private void OnOpenLogFolderClick(object sender, RoutedEventArgs e)
+    {
+        Directory.CreateDirectory(Application.App.LogDirectory);
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.App.LogDirectory) { UseShellExecute = true });
+    }
+
+    /// <summary>
     /// Opens the sensor mapping assistant.
     /// </summary>
     /// <param name="sender">The button.</param>
