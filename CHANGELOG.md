@@ -4,6 +4,7 @@
 
 ### Added
 
+- A dashboard: pin sensors from the tree (context menu) and see them as tiles with the current value and the last minute as a line. Pinned sensors and the view are kept between sessions.
 - The MSI MPG Ai1300TS PCIE5 power supply: rail currents, the twelve 12V-2x6 pin currents (GPU Safeguard+), output power, efficiency, temperature and fan. Data from upstream issues 2647 and 2361.
 - A warning in the status bar when PawnIO is missing or outdated, because CPU, motherboard and memory sensors then stay empty. Prompted by upstream issues 2348 and 2363.
 - Temperature names for the MSI MEG Z690 Unify, including both T sensors, PCIe and M.2. Data from upstream issue 1306.
@@ -11,6 +12,7 @@
 ### Fixed
 
 - IPMI no longer fails when the board controller answers the SDR repository request with a completion code only. Reported in upstream issue 2599.
+- Intel CPU power is read on its own package, so systems with several CPUs no longer show hundreds of thousands of watts. Reported in upstream issue 2018.
 - After the computer wakes from sleep, the app opens the hardware again, so fans no longer stay at 0 RPM and full duty. Reported in upstream issue 2636.
 - The core VIDs of AMD Zen 4 and Zen 5 CPUs use the SVI3 encoding and no longer read far too low and inverse to the load. Reported in upstream issues 2084 and 1684.
 - Nuvoton NCT6683D, NCT6686D and NCT6687D fans show no value instead of 65535 RPM while the chip has no reading. Reported in upstream issue 2640.

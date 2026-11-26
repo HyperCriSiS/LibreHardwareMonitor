@@ -37,6 +37,16 @@ public sealed class ViewSettings
     public bool IsDetailsVisible { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the dashboard is shown instead of the sensor tree.
+    /// </summary>
+    public bool IsDashboardVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the identifiers of the sensors pinned to the dashboard, in display order.
+    /// </summary>
+    public List<string> PinnedSensors { get; set; } = [];
+
+    /// <summary>
     /// Gets or sets the identifiers of the hidden sensors.
     /// </summary>
     public List<string> HiddenSensors { get; set; } = [];
