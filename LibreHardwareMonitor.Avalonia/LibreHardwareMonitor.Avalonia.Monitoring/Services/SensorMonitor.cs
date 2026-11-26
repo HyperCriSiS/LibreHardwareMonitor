@@ -43,6 +43,11 @@ public sealed class SensorMonitor : IDisposable
     private IReadOnlyDictionary<string, (string Name, bool Hidden)> _boardDefinitions = new Dictionary<string, (string Name, bool Hidden)>();
 
     /// <summary>
+    /// Report requests, answered on the polling thread because the hardware library is not thread safe.
+    /// </summary>
+    private readonly ConcurrentQueue<TaskCompletionSource<string>> _reportRequests = new();
+
+    /// <summary>
     /// A pause between two polls longer than this is treated as a resume from sleep.
     /// </summary>
     private static readonly TimeSpan ResumeGap = TimeSpan.FromSeconds(15);
@@ -119,6 +124,35 @@ public sealed class SensorMonitor : IDisposable
     public void Rename(string identifier, string name)
     {
         _renames.Enqueue((identifier, name?.Trim() ?? string.Empty));
+    }
+
+    /// <summary>
+    /// Creates the hardware report of the library without personal details such as serial numbers.
+    /// </summary>
+    /// <returns>The anonymized report.</returns>
+    public Task<string> CreateReportAsync()
+    {
+        TaskCompletionSource<string> request = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _reportRequests.Enqueue(request);
+        return request.Task;
+    }
+
+    /// <summary>
+    /// Answers the requested reports.
+    /// </summary>
+    private void CreateReports()
+    {
+        while (_reportRequests.TryDequeue(out TaskCompletionSource<string> request))
+        {
+            try
+            {
+                request.SetResult(ReportAnonymizer.Anonymize(_computer.GetReport(), Environment.MachineName, Environment.UserName));
+            }
+            catch (Exception exception)
+            {
+                request.SetException(exception);
+            }
+        }
     }
 
     /// <summary>
@@ -248,6 +282,7 @@ public sealed class SensorMonitor : IDisposable
                 }
 
                 ApplyRenames();
+                CreateReports();
                 SnapshotAvailable?.Invoke(CreateSnapshot());
                 _settings?.SaveIfChanged();
 

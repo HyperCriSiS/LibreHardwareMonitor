@@ -67,6 +67,11 @@ public sealed class MainWindowViewModel : ObservableObject
     public event Action<string, string> RenameRequested;
 
     /// <summary>
+    /// Gets or sets the function that creates the anonymized hardware report, or null if monitoring is not running.
+    /// </summary>
+    public Func<Task<string>> ReportProvider { get; set; }
+
+    /// <summary>
     /// Gets whether a node can be renamed.
     /// </summary>
     /// <param name="node">The node to check.</param>

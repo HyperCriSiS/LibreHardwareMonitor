@@ -88,6 +88,9 @@
                                                  TextWrapping="Wrap"
                                                  IsVisible="{Binding IsWebServerEnabled}"
                                                  Text="{Binding WebServerStatus}"/>
+                            <Separator/>
+                            <Button Content="{x:Static language:Resources.ReportOpen}"
+                                    Click="OnReportClick"/>
                         </StackPanel>
                     </Flyout>
                 </Button.Flyout>
