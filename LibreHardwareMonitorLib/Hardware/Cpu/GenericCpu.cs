@@ -63,12 +63,13 @@ public class GenericCpu : Hardware
         _cpuLoad = new CpuLoad(cpuId);
         if (_cpuLoad.IsAvailable)
         {
-            _threadLoads = new Sensor[_threadCount];
+            // Sensors are indexed by the logical processor across all processor groups, so each has its own identifier.
+            _threadLoads = new Sensor[cpuId.SelectMany(core => core).Max(id => CpuLoad.GetProcessorIndex(id.Group, id.Thread)) + 1];
             for (int coreIdx = 0; coreIdx < cpuId.Length; coreIdx++)
             {
                 for (int threadIdx = 0; threadIdx < cpuId[coreIdx].Length; threadIdx++)
                 {
-                    int thread = cpuId[coreIdx][threadIdx].Thread;
+                    int thread = CpuLoad.GetProcessorIndex(cpuId[coreIdx][threadIdx].Group, cpuId[coreIdx][threadIdx].Thread);
                     if (thread < _threadLoads.Length)
                     {
                         // Some cores may have 2 threads while others have only one (e.g. P-cores vs E-cores on Intel 12th gen).

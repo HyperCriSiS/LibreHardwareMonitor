@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- CPU load sensors get unique identifiers and correct values on systems with more than 64 logical processors, and every CPU of a multi-socket system shows its thread loads. Reported in upstream issue 1703.
 - Nuvoton NCT6683D, NCT6686D and NCT6687D fans show no value instead of 65535 RPM while the chip has no reading. Reported in upstream issue 2640.
 - NVIDIA GPU fans show no value instead of impossible speeds above 20000 RPM. Reported in upstream issue 1006.
 - The voltage sensors of the 12VHPWR pins on ASUS Astral graphics cards no longer share an identifier with the GPU core voltage. Reported in upstream issue 2615.
