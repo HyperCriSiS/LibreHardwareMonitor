@@ -28,6 +28,12 @@ public sealed partial class App : AvaloniaApplication
     /// </summary>
     private SensorMonitor _monitor;
     private SensorWebServer _webServer;
+    private SensorCsvLogger _logger;
+
+    /// <summary>
+    /// Gets the folder for the CSV logs of the pinned sensors.
+    /// </summary>
+    public static string LogDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "LibreHardwareMonitor", "Logs");
     private TrayIcon _trayIcon;
     private volatile SensorTreeSnapshot _lastSnapshot;
     private (bool Enabled, bool LocalOnly, int Port) _webServerConfiguration;
@@ -85,6 +91,38 @@ public sealed partial class App : AvaloniaApplication
         };
         _trayIcon.Clicked += (_, _) => (desktop.MainWindow as MainWindow)?.Restore();
         TrayIcon.SetIcons(this, new TrayIcons { _trayIcon });
+    }
+
+    /// <summary>
+    /// Writes the pinned sensors to the CSV log while logging is on, and closes the log when it is turned off.
+    /// </summary>
+    /// <param name="viewModel">The main window state with the pinned sensors.</param>
+    /// <param name="time">The time of the reading.</param>
+    private void WriteLog(MainWindowViewModel viewModel, DateTime time)
+    {
+        if (!viewModel.IsLoggingEnabled)
+        {
+            _logger?.Dispose();
+            _logger = null;
+            return;
+        }
+
+        try
+        {
+            _logger ??= new SensorCsvLogger(LogDirectory);
+            _logger.Write(time, viewModel.GetPinnedReadings());
+        }
+        catch (IOException)
+        {
+            // A locked or full disk must not stop monitoring; the next reading tries again with a new file.
+            _logger?.Dispose();
+            _logger = null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            _logger?.Dispose();
+            _logger = null;
+        }
     }
 
     /// <summary>
@@ -150,6 +188,7 @@ public sealed partial class App : AvaloniaApplication
             _monitor.SnapshotAvailable += snapshot => Dispatcher.UIThread.Post(() =>
             {
                 viewModel.Apply(snapshot);
+                WriteLog(viewModel, snapshot.Updated);
 
                 if (_trayIcon != null)
                     _trayIcon.ToolTipText = viewModel.GetTrayText();
@@ -169,6 +208,7 @@ public sealed partial class App : AvaloniaApplication
             {
                 _monitor.Dispose();
                 _webServer?.Dispose();
+                _logger?.Dispose();
                 _trayIcon?.Dispose();
             };
 

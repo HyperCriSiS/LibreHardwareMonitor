@@ -115,6 +115,12 @@
   <data name="TrayExit" xml:space="preserve">
     <value>Beenden</value>
   </data>
+  <data name="LoggingEnabled" xml:space="preserve">
+    <value>Angeheftete Sensoren in CSV-Dateien protokollieren</value>
+  </data>
+  <data name="LoggingOpenFolder" xml:space="preserve">
+    <value>Protokollordner öffnen</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Sensoren werden gesucht...</value>
   </data>

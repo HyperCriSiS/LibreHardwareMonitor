@@ -115,6 +115,12 @@
   <data name="TrayExit" xml:space="preserve">
     <value>Exit</value>
   </data>
+  <data name="LoggingEnabled" xml:space="preserve">
+    <value>Write the pinned sensors to CSV files</value>
+  </data>
+  <data name="LoggingOpenFolder" xml:space="preserve">
+    <value>Open log folder</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Searching for sensors...</value>
   </data>

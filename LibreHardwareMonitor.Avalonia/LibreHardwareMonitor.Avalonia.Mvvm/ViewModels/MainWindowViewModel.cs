@@ -27,6 +27,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private IReadOnlyList<DetailViewModel> _details = [];
     private bool _isDetailsVisible;
     private bool _isWebServerEnabled;
+    private bool _isLoggingEnabled;
     private bool _isTrayIconEnabled = true;
     private bool _isMinimizeToTray;
     private bool _isWebServerLocalOnly = true;
@@ -129,6 +130,7 @@ public sealed class MainWindowViewModel : ObservableObject
         WebServerPort = settings.WebServerPort is > 0 and < 65536 ? settings.WebServerPort : 8085;
         IsWebServerLocalOnly = settings.IsWebServerLocalOnly;
         IsWebServerEnabled = settings.IsWebServerEnabled;
+        IsLoggingEnabled = settings.IsLoggingEnabled;
         IsTrayIconEnabled = settings.IsTrayIconEnabled;
         IsMinimizeToTray = settings.IsMinimizeToTray;
         IsDashboardVisible = settings.IsDashboardVisible;
@@ -157,6 +159,7 @@ public sealed class MainWindowViewModel : ObservableObject
             ShowAdvanced = ShowAdvanced,
             IsDetailsVisible = IsDetailsVisible,
             IsWebServerEnabled = IsWebServerEnabled,
+            IsLoggingEnabled = IsLoggingEnabled,
             IsTrayIconEnabled = IsTrayIconEnabled,
             IsMinimizeToTray = IsMinimizeToTray,
             IsWebServerLocalOnly = IsWebServerLocalOnly,
@@ -586,6 +589,49 @@ public sealed class MainWindowViewModel : ObservableObject
             : string.Join("\n", Tiles.Select(tile => tile.Name + ": " + tile.Value));
 
         return text.Length <= maxLength ? text : text.Substring(0, maxLength - 1) + "\u2026";
+    }
+
+    /// <summary>
+    /// Gets or sets whether the pinned sensors are written to CSV files.
+    /// </summary>
+    public bool IsLoggingEnabled
+    {
+        get { return _isLoggingEnabled; }
+        set
+        {
+            if (SetProperty(ref _isLoggingEnabled, value))
+            {
+                SettingsChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the latest readings of the pinned sensors in dashboard order, for the CSV log.
+    /// </summary>
+    /// <returns>The identifier, name and value of each pinned sensor that is present.</returns>
+    public IReadOnlyList<(string Identifier, string Name, float? Value)> GetPinnedReadings()
+    {
+        if (_snapshot == null || Tiles.Count == 0)
+            return [];
+
+        Dictionary<string, SensorTreeNodeSnapshot> sensors = new();
+
+        void Collect(SensorTreeNodeSnapshot node)
+        {
+            if (node.Kind == SensorTreeNodeKind.Sensor)
+                sensors.TryAdd(node.Identifier, node);
+
+            foreach (SensorTreeNodeSnapshot child in node.Children)
+                Collect(child);
+        }
+
+        foreach (SensorTreeNodeSnapshot root in _snapshot.Roots)
+            Collect(root);
+
+        return Tiles.Where(tile => sensors.ContainsKey(tile.Identifier))
+                    .Select(tile => (tile.Identifier, sensors[tile.Identifier].Name, sensors[tile.Identifier].Value))
+                    .ToList();
     }
 
     /// <summary>
