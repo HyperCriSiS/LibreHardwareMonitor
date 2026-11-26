@@ -26,6 +26,8 @@ public sealed class MainWindowViewModel : ObservableObject
     private SensorTreeNodeViewModel _selectedNode;
     private IReadOnlyList<DetailViewModel> _details = [];
     private bool _isDetailsVisible;
+    private string _filterText = string.Empty;
+    private SensorSortOption _selectedSortOrder;
     private string _status = LanguageResources.StatusSearching;
 
     /// <summary>
@@ -39,6 +41,7 @@ public sealed class MainWindowViewModel : ObservableObject
         }
 
         _selectedGrouping = Groupings[0];
+        _selectedSortOrder = SortOrders[0];
     }
 
     /// <summary>
@@ -63,6 +66,46 @@ public sealed class MainWindowViewModel : ObservableObject
                 SelectedNode = null;
                 UpdateTree();
                 OnPropertyChanged(nameof(Hardware));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the available sensor orders.
+    /// </summary>
+    public IReadOnlyList<SensorSortOption> SortOrders { get; } =
+    [
+        new(SensorSortOrder.Default, LanguageResources.SortDefault),
+        new(SensorSortOrder.Name, LanguageResources.SortName),
+        new(SensorSortOrder.ValueDescending, LanguageResources.SortValue)
+    ];
+
+    /// <summary>
+    /// Gets or sets the order of the sensors within their parent.
+    /// </summary>
+    public SensorSortOption SelectedSortOrder
+    {
+        get { return _selectedSortOrder; }
+        set
+        {
+            if (value != null && SetProperty(ref _selectedSortOrder, value))
+            {
+                UpdateTree();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the text that hardware or sensor names must contain.
+    /// </summary>
+    public string FilterText
+    {
+        get { return _filterText; }
+        set
+        {
+            if (SetProperty(ref _filterText, value ?? string.Empty))
+            {
+                UpdateTree();
             }
         }
     }
@@ -151,7 +194,9 @@ public sealed class MainWindowViewModel : ObservableObject
     {
         if (_snapshot != null)
         {
-            SensorTreeReconciler.Reconcile(Hardware, SensorTreeGrouping.GetRoots(_snapshot, SelectedGrouping.Grouping));
+            IReadOnlyList<SensorTreeNodeSnapshot> roots = SensorTreeGrouping.GetRoots(_snapshot, SelectedGrouping.Grouping);
+
+            SensorTreeReconciler.Reconcile(Hardware, SensorTreeFilter.Apply(roots, FilterText, SelectedSortOrder.SortOrder));
             UpdateDetails();
         }
     }

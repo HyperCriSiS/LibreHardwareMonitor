@@ -27,20 +27,31 @@
 
     <Grid RowDefinitions="Auto,*,Auto"
           ColumnDefinitions="*,Auto">
-        <StackPanel Grid.Row="0"
-                    Grid.ColumnSpan="2"
-                    Orientation="Horizontal"
-                    Spacing="8"
-                    Margin="12,12,12,0">
+        <WrapPanel Grid.Row="0"
+                   Grid.ColumnSpan="2"
+                   ItemSpacing="8"
+                   LineSpacing="8"
+                   Margin="12,12,12,0">
             <TextBlock VerticalAlignment="Center"
                        Text="{x:Static language:Resources.GroupingLabel}"/>
             <ComboBox AutomationProperties.Name="{x:Static language:Resources.GroupingLabel}"
                       DisplayMemberBinding="{Binding Name}"
                       ItemsSource="{Binding Groupings}"
                       SelectedItem="{Binding SelectedGrouping}"/>
+            <TextBlock VerticalAlignment="Center"
+                       Margin="8,0,0,0"
+                       Text="{x:Static language:Resources.SortLabel}"/>
+            <ComboBox AutomationProperties.Name="{x:Static language:Resources.SortLabel}"
+                      DisplayMemberBinding="{Binding Name}"
+                      ItemsSource="{Binding SortOrders}"
+                      SelectedItem="{Binding SelectedSortOrder}"/>
+            <TextBox Width="180"
+                     AutomationProperties.Name="{x:Static language:Resources.FilterPlaceholder}"
+                     PlaceholderText="{x:Static language:Resources.FilterPlaceholder}"
+                     Text="{Binding FilterText}"/>
             <ToggleButton Content="{x:Static language:Resources.DetailsLabel}"
                           IsChecked="{Binding IsDetailsVisible}"/>
-        </StackPanel>
+        </WrapPanel>
 
         <tree:TreeDataGrid Grid.Row="1"
                            Margin="12"
@@ -119,6 +130,16 @@
                                              Width="*"
                                              MinWidth="110"
                                              Binding="{CompiledBinding Max}"
+                                             HorizontalContentAlignment="Stretch"
+                                             TextAlignment="Right"
+                                             IsReadOnly="True"/>
+
+                <!-- Sensor Average -->
+                <tree:TreeDataGridTextColumn x:DataType="vm:SensorTreeNodeViewModel"
+                                             Header="{x:Static language:Resources.ColumnAverage}"
+                                             Width="*"
+                                             MinWidth="110"
+                                             Binding="{CompiledBinding Average}"
                                              HorizontalContentAlignment="Stretch"
                                              TextAlignment="Right"
                                              IsReadOnly="True"/>

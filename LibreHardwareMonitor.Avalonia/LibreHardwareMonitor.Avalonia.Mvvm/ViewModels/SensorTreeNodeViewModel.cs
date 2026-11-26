@@ -18,6 +18,7 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
     private string _value;
     private string _min;
     private string _max;
+    private string _average;
     private bool _isExpanded;
 
     /// <summary>
@@ -111,6 +112,15 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Gets the formatted average value.
+    /// </summary>
+    public string Average
+    {
+        get { return _average; }
+        private set { SetProperty(ref _average, value); }
+    }
+
+    /// <summary>
     /// Updates the node and reconciles its children from a new snapshot.
     /// </summary>
     /// <param name="snapshot">The latest node state.</param>
@@ -125,12 +135,14 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
             Value = SensorValueFormatter.Format(snapshot.SensorType, snapshot.Value);
             Min = SensorValueFormatter.Format(snapshot.SensorType, snapshot.Min);
             Max = SensorValueFormatter.Format(snapshot.SensorType, snapshot.Max);
+            Average = SensorValueFormatter.Format(snapshot.SensorType, snapshot.Average);
         }
         else
         {
             Value = string.Empty;
             Min = string.Empty;
             Max = string.Empty;
+            Average = string.Empty;
         }
 
         SensorTreeReconciler.Reconcile(Children, snapshot.Children);

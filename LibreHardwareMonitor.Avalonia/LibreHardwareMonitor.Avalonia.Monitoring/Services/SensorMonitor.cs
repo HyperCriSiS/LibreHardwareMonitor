@@ -39,6 +39,11 @@ public sealed class SensorMonitor : IDisposable
     private readonly ConditionalWeakTable<IHardware, IReadOnlyDictionary<string, string>> _properties = new();
 
     /// <summary>
+    /// Keeps the running averages of the sensors.
+    /// </summary>
+    private readonly ConditionalWeakTable<ISensor, RunningAverage> _averages = new();
+
+    /// <summary>
     /// Tracks the running polling task so monitoring starts only once.
     /// </summary>
     private Task _worker;
@@ -177,7 +182,9 @@ public sealed class SensorMonitor : IDisposable
                     sensor.Value,
                     sensor.Min,
                     sensor.Max,
-                    Array.Empty<SensorTreeNodeSnapshot>()));
+                    Array.Empty<SensorTreeNodeSnapshot>(),
+                    null,
+                    _averages.GetOrCreateValue(sensor).Add(sensor.Value)));
             }
 
             children.Add(new SensorTreeNodeSnapshot(hardware.Identifier + "/" + group.Key,
@@ -206,6 +213,31 @@ public sealed class SensorMonitor : IDisposable
             null,
             children,
             _properties.GetValue(hardware, ReadProperties));
+    }
+
+    /// <summary>
+    /// Averages the values of a sensor, ignoring missing values.
+    /// </summary>
+    private sealed class RunningAverage
+    {
+        private int _count;
+        private double _sum;
+
+        /// <summary>
+        /// Adds a value and returns the new average.
+        /// </summary>
+        /// <param name="value">The value to add, if available.</param>
+        /// <returns>The average of all values added so far, or null if none was available.</returns>
+        public float? Add(float? value)
+        {
+            if (value.HasValue && !float.IsNaN(value.Value))
+            {
+                _sum += value.Value;
+                _count++;
+            }
+
+            return _count > 0 ? (float)(_sum / _count) : null;
+        }
     }
 
     /// <summary>

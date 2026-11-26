@@ -22,6 +22,7 @@ public sealed class SensorTreeNodeSnapshot
     /// <param name="max">The maximum sensor value, when available.</param>
     /// <param name="children">The child nodes.</param>
     /// <param name="properties">The static hardware properties, if applicable.</param>
+    /// <param name="average">The average sensor value since monitoring started, if applicable.</param>
     public SensorTreeNodeSnapshot(string identifier,
         string name,
         SensorTreeNodeKind kind,
@@ -31,7 +32,8 @@ public sealed class SensorTreeNodeSnapshot
         float? min,
         float? max,
         IReadOnlyList<SensorTreeNodeSnapshot> children,
-        IReadOnlyDictionary<string, string> properties = null)
+        IReadOnlyDictionary<string, string> properties = null,
+        float? average = null)
     {
         Identifier = identifier;
         Name = name;
@@ -43,6 +45,7 @@ public sealed class SensorTreeNodeSnapshot
         Max = max;
         Children = children;
         Properties = properties;
+        Average = average;
     }
 
     /// <summary>
@@ -84,6 +87,11 @@ public sealed class SensorTreeNodeSnapshot
     /// Gets the maximum recorded sensor value.
     /// </summary>
     public float? Max { get; }
+
+    /// <summary>
+    /// Gets the average sensor value since monitoring started.
+    /// </summary>
+    public float? Average { get; }
 
     /// <summary>
     /// Gets the child nodes.
