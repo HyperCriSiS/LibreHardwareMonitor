@@ -132,6 +132,7 @@ public sealed class MainWindowViewModel : ObservableObject
         WebServerPort = settings.WebServerPort is > 0 and < 65536 ? settings.WebServerPort : 8085;
         IsWebServerLocalOnly = settings.IsWebServerLocalOnly;
         IsWebServerEnabled = settings.IsWebServerEnabled;
+        UseFahrenheit = settings.UseFahrenheit;
         IsTrayIconEnabled = settings.IsTrayIconEnabled;
         IsMinimizeToTray = settings.IsMinimizeToTray;
         IsDashboardVisible = settings.IsDashboardVisible;
@@ -160,6 +161,7 @@ public sealed class MainWindowViewModel : ObservableObject
             ShowAdvanced = ShowAdvanced,
             IsDetailsVisible = IsDetailsVisible,
             IsWebServerEnabled = IsWebServerEnabled,
+            UseFahrenheit = UseFahrenheit,
             IsTrayIconEnabled = IsTrayIconEnabled,
             IsMinimizeToTray = IsMinimizeToTray,
             IsWebServerLocalOnly = IsWebServerLocalOnly,
@@ -663,6 +665,24 @@ public sealed class MainWindowViewModel : ObservableObject
             : string.Join("\n", Tiles.Select(tile => tile.Name + ": " + tile.Value));
 
         return text.Length <= maxLength ? text : text.Substring(0, maxLength - 1) + "\u2026";
+    }
+
+    /// <summary>
+    /// Gets or sets whether temperatures are shown in degrees Fahrenheit. The web server keeps Celsius like the raw values.
+    /// </summary>
+    public bool UseFahrenheit
+    {
+        get { return Formatting.SensorValueFormatter.UseFahrenheit; }
+        set
+        {
+            if (Formatting.SensorValueFormatter.UseFahrenheit != value)
+            {
+                Formatting.SensorValueFormatter.UseFahrenheit = value;
+                OnPropertyChanged();
+                UpdateTree();
+                SettingsChanged?.Invoke();
+            }
+        }
     }
 
     /// <summary>
