@@ -105,7 +105,8 @@ public static class SensorTreeFilter
             node.Max,
             result,
             node.Properties,
-            node.Average);
+            node.Average,
+            node.IsAdvanced);
     }
 
     /// <summary>

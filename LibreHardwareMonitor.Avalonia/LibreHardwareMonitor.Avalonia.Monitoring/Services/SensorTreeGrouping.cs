@@ -18,6 +18,8 @@ public static class SensorTreeGrouping
     /// <returns>The root nodes in the requested arrangement.</returns>
     public static IReadOnlyList<SensorTreeNodeSnapshot> GetRoots(SensorTreeSnapshot snapshot, SensorGrouping grouping)
     {
+        snapshot = new SensorTreeSnapshot(snapshot.Updated, SensorTreeFanControls.Apply(snapshot.Roots));
+
         if (grouping == SensorGrouping.Hardware)
         {
             return snapshot.Roots
@@ -177,6 +179,7 @@ public static class SensorTreeGrouping
             node.Max,
             children,
             node.Properties,
-            node.Average);
+            node.Average,
+            node.IsAdvanced);
     }
 }

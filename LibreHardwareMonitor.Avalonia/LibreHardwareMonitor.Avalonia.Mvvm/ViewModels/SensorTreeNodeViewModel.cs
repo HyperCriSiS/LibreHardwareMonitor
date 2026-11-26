@@ -34,6 +34,8 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
         // Hardware grouped below a sensor type lists its sensors directly.
         _isExpanded = Kind == SensorTreeNodeKind.Computer ||
                       Kind == SensorTreeNodeKind.Hardware && snapshot.Children.Any(child => child.Kind == SensorTreeNodeKind.Sensor) ||
+                      // A fan shows its duty cycle below it.
+                      Kind == SensorTreeNodeKind.Sensor && snapshot.Children.Count > 0 ||
                       // Groups start open, except virtual devices and filter drivers, which are rarely of interest.
                       Kind == SensorTreeNodeKind.Group && !Identifier.EndsWith("/Virtual", StringComparison.Ordinal) && !Identifier.EndsWith("/Filter", StringComparison.Ordinal);
 
