@@ -12,6 +12,7 @@ using LibreHardwareMonitor.Avalonia.UI.MockData;
 using LibreHardwareMonitor.Avalonia.UI.Services;
 using LibreHardwareMonitor.Avalonia.UI.Views;
 using AvaloniaApplication = Avalonia.Application;
+using LanguageResources = LibreHardwareMonitor.Avalonia.Localization.Resources.Resources;
 
 namespace LibreHardwareMonitor.Avalonia.UI.Application;
 
@@ -58,6 +59,13 @@ public sealed partial class App : AvaloniaApplication
 
             viewModel.ApplySettings(ViewSettings.Load(settingsPath));
             viewModel.SettingsChanged += () => viewModel.GetSettings().Save(settingsPath);
+
+            // Without PawnIO the CPU, motherboard and memory sensors stay empty without any other hint.
+            viewModel.HardwareWarning = !PawnIo.PawnIo.IsInstalled
+                ? LanguageResources.WarningPawnIoMissing
+                : PawnIo.PawnIo.Version < new Version(2, 0, 0, 0)
+                    ? LanguageResources.WarningPawnIoOutdated
+                    : null;
 
             desktop.MainWindow = new MainWindow(viewModel);
 

@@ -292,8 +292,14 @@
                 Padding="20,10"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
                 BorderThickness="0,1,0,0">
-            <TextBlock Opacity="0.7"
-                       Text="{Binding Status}"/>
+            <StackPanel Spacing="4">
+                <TextBlock FontWeight="SemiBold"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding HardwareWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                           Text="{Binding HardwareWarning}"/>
+                <TextBlock Opacity="0.7"
+                           Text="{Binding Status}"/>
+            </StackPanel>
         </Border>
     </Grid>
 

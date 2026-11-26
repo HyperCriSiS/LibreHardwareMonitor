@@ -73,6 +73,12 @@
   <data name="ColumnMaximum" xml:space="preserve">
     <value>Max</value>
   </data>
+  <data name="WarningPawnIoMissing" xml:space="preserve">
+    <value>PawnIO ist nicht installiert, daher bleiben CPU-, Mainboard- und Speichersensoren leer. Installiere es von pawnio.eu und starte die App neu.</value>
+  </data>
+  <data name="WarningPawnIoOutdated" xml:space="preserve">
+    <value>PawnIO ist veraltet, daher können einige Sensoren leer bleiben. Aktualisiere es von pawnio.eu und starte die App neu.</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Sensoren werden gesucht...</value>
   </data>

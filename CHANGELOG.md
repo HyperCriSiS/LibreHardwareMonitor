@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- A warning in the status bar when PawnIO is missing or outdated, because CPU, motherboard and memory sensors then stay empty. Prompted by upstream issues 2348 and 2363.
+
 ### Fixed
 
 - The voltage sensors of the 12VHPWR pins on ASUS Astral graphics cards no longer share an identifier with the GPU core voltage. Reported in upstream issue 2615.
