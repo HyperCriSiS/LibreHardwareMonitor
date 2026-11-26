@@ -4,13 +4,21 @@
 // All Rights Reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Net.NetworkInformation;
+using System.Security;
+using Microsoft.Win32;
+using OperatingSystem = LibreHardwareMonitor.Software.OperatingSystem;
 
 namespace LibreHardwareMonitor.Hardware.Network;
 
 internal sealed class Network : Hardware
 {
+    private const string NetworkAdapterClassKey = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}";
+
     private readonly Sensor _dataDownloaded;
     private readonly Sensor _dataUploaded;
     private readonly Sensor _downloadSpeed;
@@ -45,6 +53,66 @@ internal sealed class Network : Hardware
     }
 
     internal NetworkInterface NetworkInterface { get; private set; }
+
+    public override IDictionary<string, string> Properties
+    {
+        get
+        {
+            SortedDictionary<string, string> properties = new();
+
+            AddProperty("Adapter", NetworkInterface.Description);
+
+            // Virtual adapters can report types without a name.
+            if (Enum.IsDefined(typeof(NetworkInterfaceType), NetworkInterface.NetworkInterfaceType))
+                AddProperty("Interface type", NetworkInterface.NetworkInterfaceType.ToString());
+
+            if (!OperatingSystem.IsUnix)
+                AddDriverProperties();
+
+            return properties;
+
+            void AddProperty(string name, string value)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                    properties.Add(name, value);
+            }
+
+            void AddDriverProperties()
+            {
+                try
+                {
+                    using RegistryKey classKey = Registry.LocalMachine.OpenSubKey(NetworkAdapterClassKey);
+                    if (classKey == null)
+                        return;
+
+                    foreach (string name in classKey.GetSubKeyNames())
+                    {
+                        // Adapters use numbered keys. Other keys, for example "Properties", are not accessible.
+                        if (!int.TryParse(name, NumberStyles.None, CultureInfo.InvariantCulture, out _))
+                            continue;
+
+                        using RegistryKey key = classKey.OpenSubKey(name);
+                        if (!NetworkInterface.Id.Equals(key?.GetValue("NetCfgInstanceId") as string, StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        AddProperty("Driver description", key.GetValue("DriverDesc") as string);
+                        AddProperty("Driver provider", key.GetValue("ProviderName") as string);
+                        AddProperty("Driver version", key.GetValue("DriverVersion") as string);
+
+                        if (DateTime.TryParseExact(key.GetValue("DriverDate") as string, "M-d-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+                            AddProperty("Driver date", date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+                        AddProperty("Matching device ID", key.GetValue("MatchingDeviceId") as string);
+                        break;
+                    }
+                }
+                catch (Exception e) when (e is SecurityException or UnauthorizedAccessException or IOException)
+                {
+                    // The driver information is optional.
+                }
+            }
+        }
+    }
 
     public override void Update()
     {
