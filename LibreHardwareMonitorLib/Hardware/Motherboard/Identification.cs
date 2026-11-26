@@ -776,6 +776,8 @@ internal class Identification
                 return Model.X870E_UNIFY_X_MAX;
             case var _ when name.Equals("MEG Z790 GODLIKE MAX (MS-7D85)", StringComparison.OrdinalIgnoreCase):
                 return Model.Z790_GODLIKE_MAX;
+            case var _ when name.Equals("MEG Z690 UNIFY (MS-7D28)", StringComparison.OrdinalIgnoreCase):
+                return Model.Z690_UNIFY;
             case var _ when name.Equals("MEG Z890 ACE (MS-7E22)", StringComparison.OrdinalIgnoreCase):
                 return Model.Z890_ACE;
             case var _ when name.Equals("MEG Z890 UNIFY-X (MS-7E20)", StringComparison.OrdinalIgnoreCase):

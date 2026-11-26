@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Temperature names for the MSI MEG Z690 Unify, including both T sensors, PCIe and M.2. Data from upstream issue 1306.
+
 ### Adopted from upstream
 
 Changes taken from open pull requests of the original LibreHardwareMonitor project. Credit goes to their authors.
