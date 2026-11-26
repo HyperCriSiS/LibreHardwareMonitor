@@ -23,6 +23,10 @@
 
     <ui:DecoratedWindow.Resources>
         <converters:SensorIconConverter x:Key="SensorIconConverter"/>
+        <converters:HistoryPointsConverter x:Key="DetailHistoryConverter"
+                                           Width="236"
+                                           Height="80"
+                                           Length="0"/>
     </ui:DecoratedWindow.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto,Auto"
@@ -349,6 +353,23 @@
                       Margin="0,12,12,12"
                       IsVisible="{Binding IsDetailsVisible}">
             <StackPanel>
+                <StackPanel Margin="0,0,0,12"
+                            IsVisible="{Binding SelectedHistoryRange, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock FontWeight="SemiBold"
+                               Text="{x:Static language:Resources.HistoryLabel}"/>
+                    <Border Margin="0,4,0,2"
+                            Padding="0,4"
+                            BorderThickness="0,0,0,1"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                        <Polyline Height="80"
+                                  Width="236"
+                                  StrokeThickness="1.5"
+                                  Stroke="{DynamicResource SystemControlHighlightAccentBrush}"
+                                  Points="{Binding SelectedHistory, Converter={StaticResource DetailHistoryConverter}}"/>
+                    </Border>
+                    <TextBlock Opacity="0.7"
+                               Text="{Binding SelectedHistoryRange}"/>
+                </StackPanel>
                 <TextBlock IsVisible="{Binding !Details.Count}"
                            Opacity="0.7"
                            Text="{x:Static language:Resources.DetailsEmpty}"
