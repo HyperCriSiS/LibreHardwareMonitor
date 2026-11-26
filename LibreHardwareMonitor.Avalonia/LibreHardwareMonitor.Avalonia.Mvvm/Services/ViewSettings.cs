@@ -62,6 +62,16 @@ public sealed class ViewSettings
     public bool UseFahrenheit { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the gadget with the pinned sensors is shown.
+    /// </summary>
+    public bool IsGadgetVisible { get; set; }
+
+    /// <summary>
+    /// Gets or sets the screen position of the gadget, or null to let the system place it.
+    /// </summary>
+    public int[] GadgetPosition { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the web server with data.json runs.
     /// </summary>
     public bool IsWebServerEnabled { get; set; }
