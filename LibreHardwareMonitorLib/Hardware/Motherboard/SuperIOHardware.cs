@@ -5067,6 +5067,34 @@ internal sealed class SuperIOHardware : Hardware
 
                         break;
 
+                    case Model.ROG_STRIX_X570_E_GAMING: //NCT6798D-R
+                        // Channels, voltage dividers and fan headers from the hardware monitor table of the BIOS
+                        // (version 5055): fan inputs 1 to 6 and voltage inputs 0, 1, 3 and 4.
+                        v.Add(new Voltage("Vcore", 0, 10, 10));
+                        v.Add(new Voltage("+5V", 1, 4, 1));
+                        v.Add(new Voltage("AVCC", 2, 10, 10));
+                        v.Add(new Voltage("+3.3V", 3, 34, 34));
+                        v.Add(new Voltage("+12V", 4, 11, 1));
+                        v.Add(new Voltage("+3V Standby", 7, 34, 34));
+                        v.Add(new Voltage("CMOS Battery", 8, 34, 34));
+                        v.Add(new Voltage("CPU Termination", 9));
+                        t.Add(new Temperature("CPU", 1));
+                        t.Add(new Temperature("Motherboard", 2));
+                        t.Add(new Temperature("Temperature #3", 3));
+                        t.Add(new Temperature("Temperature #4", 4));
+                        t.Add(new Temperature("Temperature #5", 5));
+                        t.Add(new Temperature("Temperature #6", 6));
+                        t.Add(new Temperature("Temperature #7", 7));
+
+                        string[] x570EFans = ["Chassis Fan 1", "CPU Fan", "Chassis Fan 2", "M.2 Fan", "AIO Pump", "W_PUMP+"];
+                        for (int i = 0; i < Math.Min(superIO.Fans.Length, x570EFans.Length); i++)
+                            f.Add(new Fan(x570EFans[i], i));
+
+                        for (int i = 0; i < Math.Min(superIO.Controls.Length, x570EFans.Length); i++)
+                            c.Add(new Control(x570EFans[i], i));
+
+                        break;
+
                     case Model.ROG_STRIX_X570_I_GAMING: //NCT6798D
                         v.Add(new Voltage("Vcore", 0, 10, 10));
                         v.Add(new Voltage("+5V", 1, 4, 1)); //Probably not updating properly
