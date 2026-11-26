@@ -4,6 +4,7 @@
 
 ### Added
 
+- Board files: JSON files in Documents\LibreHardwareMonitor\Boards name or hide sensors of a motherboard without a new release; your own renames always win. See docs/board-files.md.
 - A history of the selected sensor in the details pane: the last five minutes as a line with the lowest and highest reading.
 - An icon in the notification area with the pinned sensors as tooltip, a menu to show the window or exit, and an option to minimize to the notification area.
 - A read-only web server for other apps (Options, off by default): data.json in the format of the classic app on port 8085, only from this computer unless that option is turned off. Asked for in upstream issue 1035 and others.

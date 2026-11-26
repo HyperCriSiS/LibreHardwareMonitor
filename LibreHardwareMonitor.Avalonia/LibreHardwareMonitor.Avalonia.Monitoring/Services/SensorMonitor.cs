@@ -33,6 +33,16 @@ public sealed class SensorMonitor : IDisposable
     private readonly ConcurrentQueue<(string Identifier, string Name)> _renames = new();
 
     /// <summary>
+    /// The folder with the board files, or null to use none.
+    /// </summary>
+    private readonly string _boardDirectory;
+
+    /// <summary>
+    /// Sensor names and hidden flags for this motherboard from the board files.
+    /// </summary>
+    private IReadOnlyDictionary<string, (string Name, bool Hidden)> _boardDefinitions = new Dictionary<string, (string Name, bool Hidden)>();
+
+    /// <summary>
     /// A pause between two polls longer than this is treated as a resume from sleep.
     /// </summary>
     private static readonly TimeSpan ResumeGap = TimeSpan.FromSeconds(15);
@@ -41,8 +51,9 @@ public sealed class SensorMonitor : IDisposable
     /// Initializes the monitor.
     /// </summary>
     /// <param name="settings">Stores custom names between sessions, or null to keep them only in memory.</param>
-    public SensorMonitor(JsonSettings settings = null)
+    public SensorMonitor(JsonSettings settings = null, string boardDirectory = null)
     {
+        _boardDirectory = boardDirectory;
         _settings = settings;
         _computer = settings == null ? new Computer() : new Computer(settings);
         _computer.IsBatteryEnabled = true;
@@ -111,6 +122,47 @@ public sealed class SensorMonitor : IDisposable
     }
 
     /// <summary>
+    /// The settings key suffix that marks a name chosen by the user.
+    /// </summary>
+    private const string UserNameKey = "userName";
+
+    /// <summary>
+    /// Loads the board files for the motherboard of this computer.
+    /// </summary>
+    private void LoadBoardDefinitions()
+    {
+        _boardDefinitions = _boardDirectory == null
+            ? new Dictionary<string, (string Name, bool Hidden)>()
+            : BoardDefinitions.Load(_boardDirectory, _computer.SMBios?.Board?.ProductName);
+    }
+
+    /// <summary>
+    /// Gets whether the user renamed a sensor. Names stored before this was tracked count as the user's choice.
+    /// </summary>
+    private bool IsRenamedByUser(string identifier)
+    {
+        if (_settings == null)
+            return false;
+
+        string marker = _settings.GetValue(identifier + "/" + UserNameKey, null);
+        return marker == "1" || marker == null && _settings.Contains(identifier + "/name");
+    }
+
+    /// <summary>
+    /// Gets the name and hidden flag of a sensor, using the board files unless the user renamed it.
+    /// </summary>
+    private (string Name, bool Hidden) GetDisplayName(ISensor sensor)
+    {
+        string identifier = sensor.Identifier.ToString();
+
+        if (!_boardDefinitions.TryGetValue(identifier, out (string Name, bool Hidden) definition))
+            return (sensor.Name, sensor.IsDefaultHidden);
+
+        string name = definition.Name != null && !IsRenamedByUser(identifier) ? definition.Name : sensor.Name;
+        return (name, sensor.IsDefaultHidden || definition.Hidden);
+    }
+
+    /// <summary>
     /// Applies the requested renames.
     /// </summary>
     private void ApplyRenames()
@@ -121,6 +173,9 @@ public sealed class SensorMonitor : IDisposable
             {
                 Rename(hardware, rename.Identifier, rename.Name);
             }
+
+            // Remember whether the user chose the name, so names from board files never replace it.
+            _settings?.SetValue(rename.Identifier + "/" + UserNameKey, rename.Name.Length > 0 ? "1" : "0");
         }
     }
 
@@ -166,6 +221,7 @@ public sealed class SensorMonitor : IDisposable
         try
         {
             _computer.Open();
+            LoadBoardDefinitions();
             long lastPoll = Environment.TickCount64;
 
             while (!cancellationToken.IsCancellationRequested)
@@ -176,6 +232,7 @@ public sealed class SensorMonitor : IDisposable
                 if (now - lastPoll > ResumeGap.TotalMilliseconds)
                 {
                     _computer.Reset();
+                    LoadBoardDefinitions();
                 }
 
                 lastPoll = now;
@@ -264,8 +321,9 @@ public sealed class SensorMonitor : IDisposable
 
             foreach (ISensor sensor in group)
             {
+                (string name, bool hidden) = GetDisplayName(sensor);
                 sensors.Add(new SensorTreeNodeSnapshot(sensor.Identifier.ToString(),
-                    sensor.Name,
+                    name,
                     SensorTreeNodeKind.Sensor,
                     null,
                     sensor.SensorType,
@@ -275,7 +333,7 @@ public sealed class SensorMonitor : IDisposable
                     Array.Empty<SensorTreeNodeSnapshot>(),
                     null,
                     _averages.GetOrCreateValue(sensor).Add(sensor.Value),
-                    sensor.IsDefaultHidden));
+                    hidden));
             }
 
             children.Add(new SensorTreeNodeSnapshot(hardware.Identifier + "/" + group.Key,

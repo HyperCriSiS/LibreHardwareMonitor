@@ -144,7 +144,8 @@ public sealed partial class App : AvaloniaApplication
 
             _monitor = new SensorMonitor(new JsonSettings(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "LibreHardwareMonitor",
-                "LibreHardwareMonitor.Avalonia.Sensors.json")));
+                "LibreHardwareMonitor.Avalonia.Sensors.json")),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "LibreHardwareMonitor", "Boards"));
             viewModel.RenameRequested += _monitor.Rename;
 
             _monitor.SnapshotAvailable += snapshot => Dispatcher.UIThread.Post(() =>
