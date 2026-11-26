@@ -31,6 +31,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private string _selectedHistoryRange = string.Empty;
     private bool _isWebServerEnabled;
     private bool _isLoggingEnabled;
+    private bool _isGadgetVisible;
     private bool _isTrayIconEnabled = true;
     private bool _isMinimizeToTray;
     private bool _isWebServerLocalOnly = true;
@@ -134,6 +135,8 @@ public sealed class MainWindowViewModel : ObservableObject
         IsWebServerLocalOnly = settings.IsWebServerLocalOnly;
         IsWebServerEnabled = settings.IsWebServerEnabled;
         IsLoggingEnabled = settings.IsLoggingEnabled;
+        GadgetPosition = settings.GadgetPosition is [int x, int y] ? (x, y) : null;
+        IsGadgetVisible = settings.IsGadgetVisible;
         UseFahrenheit = settings.UseFahrenheit;
         IsTrayIconEnabled = settings.IsTrayIconEnabled;
         IsMinimizeToTray = settings.IsMinimizeToTray;
@@ -164,6 +167,8 @@ public sealed class MainWindowViewModel : ObservableObject
             IsDetailsVisible = IsDetailsVisible,
             IsWebServerEnabled = IsWebServerEnabled,
             IsLoggingEnabled = IsLoggingEnabled,
+            IsGadgetVisible = IsGadgetVisible,
+            GadgetPosition = GadgetPosition is { } position ? [position.X, position.Y] : null,
             UseFahrenheit = UseFahrenheit,
             IsTrayIconEnabled = IsTrayIconEnabled,
             IsMinimizeToTray = IsMinimizeToTray,
@@ -687,6 +692,26 @@ public sealed class MainWindowViewModel : ObservableObject
             }
         }
     }
+
+    /// <summary>
+    /// Gets or sets whether the gadget with the pinned sensors is shown.
+    /// </summary>
+    public bool IsGadgetVisible
+    {
+        get { return _isGadgetVisible; }
+        set
+        {
+            if (SetProperty(ref _isGadgetVisible, value))
+            {
+                SettingsChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the screen position of the gadget, or null to let the system place it. Stored with the next settings change.
+    /// </summary>
+    public (int X, int Y)? GadgetPosition { get; set; }
 
     /// <summary>
     /// Gets or sets whether the pinned sensors are written to CSV files.
