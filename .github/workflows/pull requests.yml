@@ -89,6 +89,10 @@ jobs:
       - name: Build x64 libraries
         run: dotnet build LibreHardwareMonitorLib\LibreHardwareMonitorLib.csproj -c Release --no-restore -p:Platform=x64
 
+      # The Super I/O board data is generated from the board code; a change to either must keep both in step.
+      - name: Check Super I/O board data against the board code
+        run: dotnet run --project tools\SuperIOBoardData\SuperIOBoardData.csproj -c Release -p:Platform=x64 -- verify LibreHardwareMonitorLib\Resources\SuperIOBoards.txt
+
       - name: Publish x64 libraries
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # 7.0.1
         with:

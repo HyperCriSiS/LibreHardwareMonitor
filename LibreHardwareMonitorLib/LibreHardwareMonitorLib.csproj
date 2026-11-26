@@ -63,6 +63,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\SuperIOBoards.txt" LogicalName="LibreHardwareMonitor.Resources.SuperIOBoards.txt" />
     <EmbeddedResource Include="Resources\PawnIo\AMDFamily0F.bin" />
     <EmbeddedResource Include="Resources\PawnIo\AMDFamily10.bin" />
     <EmbeddedResource Include="Resources\PawnIo\AMDFamily17.bin" />
@@ -104,6 +105,11 @@
     <None Include="Resources\packageicon.png" PackagePath="">
       <Pack>True</Pack>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The tool that generates and checks Resources/SuperIOBoards.txt runs the board code. -->
+    <InternalsVisibleTo Include="SuperIOBoardData" />
   </ItemGroup>
 
   <Import Project="main.nuget.target" Condition="'$(PackMainNuget)' == 'true'" />
