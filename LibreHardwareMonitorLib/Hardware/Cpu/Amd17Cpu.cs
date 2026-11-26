@@ -811,7 +811,7 @@ internal sealed class Amd17Cpu : AmdCpu
                     coreClock = curCpuFid * 5;
 
                     // multiplier, clock speed with 100Mhz as Multiplier Reference
-                    _multiplier.Value = (float)((curCpuFid * 5) / busClock);
+                    _multiplier.Value = curCpuFid > 0 ? (float)((curCpuFid * 5) / busClock) : null;
                 }
                 else
                 {
@@ -823,10 +823,11 @@ internal sealed class Amd17Cpu : AmdCpu
                     int curCpuDfsId = (int)((msrPstate >> 8) & 0x3f);
                     int curCpuFid = (int)(msrPstate & 0xff);
 
-                    coreClock = (curCpuFid / (double)curCpuDfsId * (busClock * 2));
+                    // A divisor of 0 means the MSR could not be read, for example without administrator rights.
+                    coreClock = curCpuDfsId > 0 ? curCpuFid / (double)curCpuDfsId * (busClock * 2) : 0;
 
                     // multiplier
-                    _multiplier.Value = (float)(curCpuFid / (double)curCpuDfsId * 2.0);
+                    _multiplier.Value = curCpuDfsId > 0 ? (float)(curCpuFid / (double)curCpuDfsId * 2.0) : null;
                 }
 
                 //clock values valid when AperfDelta < MperfDelta (ratio is < 1.0)
@@ -834,7 +835,7 @@ internal sealed class Amd17Cpu : AmdCpu
                     coreClock = ((double)thread.AperfDelta / (double)thread.MperfDelta) * coreClock;
 
                 CoreClock = Math.Round(coreClock);
-                _clock.Value = (float)CoreClock;
+                _clock.Value = CoreClock > 0 ? (float)CoreClock : null;
             }
 
             // Vcore voltage
