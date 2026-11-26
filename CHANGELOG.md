@@ -4,6 +4,7 @@
 
 ### Added
 
+- An icon in the notification area with the pinned sensors as tooltip, a menu to show the window or exit, and an option to minimize to the notification area.
 - A read-only web server for other apps (Options, off by default): data.json in the format of the classic app on port 8085, only from this computer unless that option is turned off. Asked for in upstream issue 1035 and others.
 - A dashboard: pin sensors from the tree (context menu) and see them as tiles with the current value and the last minute as a line. Pinned sensors and the view are kept between sessions.
 - The MSI MPG Ai1300TS PCIE5 power supply: rail currents, the twelve 12V-2x6 pin currents (GPU Safeguard+), output power, efficiency, temperature and fan. Data from upstream issues 2647 and 2361.

@@ -64,6 +64,12 @@
                     <Flyout Placement="BottomEdgeAlignedRight">
                         <StackPanel Spacing="8"
                                     MaxWidth="360">
+                            <CheckBox Content="{x:Static language:Resources.TrayIconEnabled}"
+                                      IsChecked="{Binding IsTrayIconEnabled}"/>
+                            <CheckBox Margin="24,0,0,0"
+                                      Content="{x:Static language:Resources.MinimizeToTray}"
+                                      IsEnabled="{Binding IsTrayIconEnabled}"
+                                      IsChecked="{Binding IsMinimizeToTray}"/>
                             <CheckBox Content="{x:Static language:Resources.WebServerEnabled}"
                                       IsChecked="{Binding IsWebServerEnabled}"/>
                             <CheckBox Margin="24,0,0,0"
