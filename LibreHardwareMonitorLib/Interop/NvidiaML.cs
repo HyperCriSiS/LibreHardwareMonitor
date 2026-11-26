@@ -339,6 +339,33 @@ internal static class NvidiaML
         return null;
     }
 
+    /// <summary>
+    /// Calls an NVML device query that returns one unsigned integer, for example
+    /// nvmlDeviceGetCurrPcieLinkGeneration. Windows only; the function is looked up by name on each call.
+    /// </summary>
+    /// <param name="nvmlDevice">The device.</param>
+    /// <param name="function">The NVML function name.</param>
+    /// <returns>The value, or null if the function is missing or fails.</returns>
+    public static uint? NvmlDeviceGetUInt32(NvmlDevice nvmlDevice, string function)
+    {
+        if (!IsAvailable || Software.OperatingSystem.IsUnix || _windowsDll == null || _windowsDll.IsInvalid)
+            return null;
+
+        IntPtr address = PInvoke.GetProcAddress(_windowsDll, function);
+        if (address == IntPtr.Zero)
+            return null;
+
+        try
+        {
+            WindowsNvmlDeviceGetUInt32Delegate query = Marshal.GetDelegateForFunctionPointer<WindowsNvmlDeviceGetUInt32Delegate>(address);
+            return query(nvmlDevice, out uint value) == NvmlReturn.Success ? value : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public static int? NvmlDeviceGetPowerUsage(NvmlDevice nvmlDevice)
     {
         if (IsAvailable)
@@ -447,6 +474,8 @@ internal static class NvidiaML
     private delegate NvmlReturn WindowsNvmlGetHandleByPciBusIdDelegate([MarshalAs(UnmanagedType.LPStr)] string pciBusId, out NvmlDevice device);
 
     private delegate NvmlReturn WindowsNvmlGetPowerUsageDelegate(NvmlDevice device, out int power);
+
+    private delegate NvmlReturn WindowsNvmlDeviceGetUInt32Delegate(NvmlDevice device, out uint value);
 
     private delegate NvmlReturn WindowsNvmlDeviceGetPcieThroughputDelegate(NvmlDevice device, NvmlPcieUtilCounter counter, out uint value);
 

@@ -50,6 +50,8 @@ internal sealed class NvidiaGpu : GenericGpu
     private readonly uint _pciDeviceId;
     private readonly Sensor _pcieThroughputRx;
     private readonly Sensor _pcieThroughputTx;
+    private readonly Sensor _pcieLinkGeneration;
+    private readonly Sensor _pcieLinkWidth;
     private readonly Sensor[] _powers;
     private readonly Sensor _powerUsage;
     private readonly Sensor _coreVoltage;
@@ -431,6 +433,10 @@ internal sealed class NvidiaGpu : GenericGpu
         _powerUsage = new Sensor("GPU Package", 0, SensorType.Power, this, settings);
         _pcieThroughputRx = new Sensor("GPU PCIe Rx", 0, SensorType.Throughput, this, settings);
         _pcieThroughputTx = new Sensor("GPU PCIe Tx", 1, SensorType.Throughput, this, settings);
+
+        // The link changes with the power state, so it is a sensor. Hidden by default, because few need it.
+        _pcieLinkGeneration = new Sensor("PCIe Link Generation", 20, true, SensorType.Factor, this, null, settings);
+        _pcieLinkWidth = new Sensor("PCIe Link Width", 21, true, SensorType.Factor, this, null, settings);
 
         NvidiaML.NvmlPciInfo? pciInfo = null;
 
@@ -845,6 +851,8 @@ internal sealed class NvidiaGpu : GenericGpu
             int? powerUsage = null;
             uint? rx = null;
             uint? tx = null;
+            uint? linkGeneration = null;
+            uint? linkWidth = null;
 
             lock (NvidiaML.SyncRoot)
             {
@@ -856,6 +864,9 @@ internal sealed class NvidiaGpu : GenericGpu
 
                     rx = NvidiaML.NvmlDeviceGetPcieThroughput(nvmlDevice.Value, NvidiaML.NvmlPcieUtilCounter.RxBytes);
                     tx = NvidiaML.NvmlDeviceGetPcieThroughput(nvmlDevice.Value, NvidiaML.NvmlPcieUtilCounter.TxBytes);
+
+                    linkGeneration = NvidiaML.NvmlDeviceGetUInt32(nvmlDevice.Value, "nvmlDeviceGetCurrPcieLinkGeneration");
+                    linkWidth = NvidiaML.NvmlDeviceGetUInt32(nvmlDevice.Value, "nvmlDeviceGetCurrPcieLinkWidth");
                 }
             }
 
@@ -872,6 +883,14 @@ internal sealed class NvidiaGpu : GenericGpu
             _pcieThroughputTx.Value = tx * 1024;
             if (tx.HasValue)
                 ActivateSensor(_pcieThroughputTx);
+
+            _pcieLinkGeneration.Value = linkGeneration;
+            if (linkGeneration.HasValue)
+                ActivateSensor(_pcieLinkGeneration);
+
+            _pcieLinkWidth.Value = linkWidth;
+            if (linkWidth.HasValue)
+                ActivateSensor(_pcieLinkWidth);
 
             // Astral specific
             if (_12VHPwrPinCurrentSensors is { Length: > 0 } && TryReadAstral12VHPwrPinSensors(out ushort[] pinSensorValues))
@@ -1053,6 +1072,24 @@ internal sealed class NvidiaGpu : GenericGpu
         get
         {
             SortedDictionary<string, string> properties = new();
+
+            lock (NvidiaML.SyncRoot)
+            {
+                NvidiaML.NvmlDevice? nvmlDevice = GetNvmlDevice();
+                if (nvmlDevice.HasValue)
+                {
+                    uint? maxGeneration = NvidiaML.NvmlDeviceGetUInt32(nvmlDevice.Value, "nvmlDeviceGetMaxPcieLinkGeneration");
+                    uint? maxWidth = NvidiaML.NvmlDeviceGetUInt32(nvmlDevice.Value, "nvmlDeviceGetMaxPcieLinkWidth");
+                    if (maxGeneration.HasValue && maxWidth.HasValue)
+                        properties.Add("PCIe link maximum", string.Format(CultureInfo.InvariantCulture, "Gen {0} x{1}", maxGeneration, maxWidth));
+
+                    if (NvidiaML.NvmlDeviceGetUInt32(nvmlDevice.Value, "nvmlDeviceGetEnforcedPowerLimit") is { } powerLimit)
+                        properties.Add("Power limit", string.Format(CultureInfo.InvariantCulture, "{0:0} W", powerLimit / 1000.0));
+
+                    if (NvidiaML.NvmlDeviceGetUInt32(nvmlDevice.Value, "nvmlDeviceGetPowerManagementDefaultLimit") is { } defaultLimit)
+                        properties.Add("Power limit default", string.Format(CultureInfo.InvariantCulture, "{0:0} W", defaultLimit / 1000.0));
+                }
+            }
 
             if (_displayHandle.HasValue && NvApi.NvAPI_GetDisplayDriverVersion != null)
             {
