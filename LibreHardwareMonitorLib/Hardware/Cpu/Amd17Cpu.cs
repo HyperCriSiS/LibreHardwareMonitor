@@ -732,6 +732,22 @@ internal sealed class Amd17Cpu : AmdCpu
             Threads.Add(t);
         }
 
+        /// <summary>
+        /// Reads the P0 frequency in MHz from the P-state definition, or 0 if it cannot be read.
+        /// </summary>
+        private double GetP0Clock(uint family)
+        {
+            if (!_cpu._pawnModule.ReadMsr(MSR_PSTATE_0, out uint eax, out _) || eax == 0)
+                return 0;
+
+            if (family == 0x1A)
+                return (eax & 0xfff) * 5.0;
+
+            uint cpuDfsId = (eax >> 8) & 0x3f;
+            uint cpuFid = eax & 0xff;
+            return cpuDfsId > 0 ? cpuFid / (double)cpuDfsId * 200.0 : 0;
+        }
+
         public void UpdateSensors()
         {
             if (Threads.Count == 0)
@@ -830,18 +846,32 @@ internal sealed class Amd17Cpu : AmdCpu
                     _multiplier.Value = curCpuDfsId > 0 ? (float)(curCpuFid / (double)curCpuDfsId * 2.0) : null;
                 }
 
-                //clock values valid when AperfDelta < MperfDelta (ratio is < 1.0)
-                if (thread.AperfDelta < thread.MperfDelta)
-                    coreClock = ((double)thread.AperfDelta / (double)thread.MperfDelta) * coreClock;
+                if (coreClock > 0)
+                {
+                    //clock values valid when AperfDelta < MperfDelta (ratio is < 1.0)
+                    if (thread.AperfDelta < thread.MperfDelta)
+                        coreClock = ((double)thread.AperfDelta / (double)thread.MperfDelta) * coreClock;
+                }
+                else
+                {
+                    // The current P-state reads 0 on some systems. MPERF counts at the P0 frequency, so P0 scaled by
+                    // APERF / MPERF gives the clock while the core is active.
+                    double p0Clock = GetP0Clock(thread.Cpu.Family);
+                    if (p0Clock > 0)
+                    {
+                        coreClock = p0Clock * thread.AperfDelta / thread.MperfDelta;
+                        _multiplier.Value = (float)(coreClock / busClock);
+                    }
+                }
 
                 CoreClock = Math.Round(coreClock);
                 _clock.Value = CoreClock > 0 ? (float)CoreClock : null;
             }
 
-            // Vcore voltage
+            // Vcore voltage, unknown if the P-state status could not be read
             const double vidStep = 0.00625;
             double vcc = 1.550 - (vidStep * curCpuVid);
-            _vcore.Value = (float)vcc;
+            _vcore.Value = msrPstate != 0 ? (float)vcc : null;
 
             // core power consumption
             //current delta time
