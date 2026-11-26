@@ -1,10 +1,12 @@
 ﻿// SPDX-License-Identifier: MPL-2.0
 
+using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using LibreHardwareMonitor.Avalonia.Monitoring.Models;
 using LibreHardwareMonitor.Avalonia.Monitoring.Services;
 using LibreHardwareMonitor.Avalonia.Mvvm.Services;
 using LibreHardwareMonitor.Avalonia.Mvvm.ViewModels;
@@ -25,6 +27,9 @@ public sealed partial class App : AvaloniaApplication
     /// Keeps the sensor monitor alive for the desktop application's lifetime.
     /// </summary>
     private SensorMonitor _monitor;
+    private SensorWebServer _webServer;
+    private volatile SensorTreeSnapshot _lastSnapshot;
+    private (bool Enabled, bool LocalOnly, int Port) _webServerConfiguration;
 
     /// <summary>
     /// Loads the application styles and resources.
@@ -42,6 +47,37 @@ public sealed partial class App : AvaloniaApplication
         else
         {
             Global.FontManager = new FontService();
+        }
+    }
+
+    /// <summary>
+    /// Starts, restarts or stops the web server to match the settings.
+    /// </summary>
+    /// <param name="viewModel">The main window state with the web server settings.</param>
+    private void UpdateWebServer(MainWindowViewModel viewModel)
+    {
+        (bool Enabled, bool LocalOnly, int Port) wanted = (viewModel.IsWebServerEnabled, viewModel.IsWebServerLocalOnly, viewModel.WebServerPort);
+        if (wanted == _webServerConfiguration)
+            return;
+
+        _webServerConfiguration = wanted;
+        _webServer?.Dispose();
+        _webServer = null;
+
+        if (!wanted.Enabled)
+        {
+            viewModel.WebServerStatus = string.Empty;
+            return;
+        }
+
+        try
+        {
+            _webServer = new SensorWebServer(wanted.Port, wanted.LocalOnly, _lastSnapshot);
+            viewModel.WebServerStatus = _webServer.DataAddress;
+        }
+        catch (Exception exception)
+        {
+            viewModel.WebServerStatus = string.Format(CultureInfo.CurrentCulture, LanguageResources.WebServerFailedFormat, exception.Message);
         }
     }
 
@@ -75,9 +111,20 @@ public sealed partial class App : AvaloniaApplication
             viewModel.RenameRequested += _monitor.Rename;
 
             _monitor.SnapshotAvailable += snapshot => Dispatcher.UIThread.Post(() => viewModel.Apply(snapshot));
+            _monitor.SnapshotAvailable += snapshot =>
+            {
+                _lastSnapshot = snapshot;
+                _webServer?.Update(snapshot);
+            };
+            viewModel.SettingsChanged += () => UpdateWebServer(viewModel);
+            UpdateWebServer(viewModel);
             _monitor.ErrorOccurred += message => Dispatcher.UIThread.Post(() => viewModel.ShowError(message));
 
-            desktop.Exit += (_, _) => _monitor.Dispose();
+            desktop.Exit += (_, _) =>
+            {
+                _monitor.Dispose();
+                _webServer?.Dispose();
+            };
 
             _monitor.Start();
         }

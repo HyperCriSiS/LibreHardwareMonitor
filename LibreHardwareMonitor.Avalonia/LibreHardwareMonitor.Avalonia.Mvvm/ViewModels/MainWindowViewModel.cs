@@ -26,6 +26,10 @@ public sealed class MainWindowViewModel : ObservableObject
     private SensorTreeNodeViewModel _selectedNode;
     private IReadOnlyList<DetailViewModel> _details = [];
     private bool _isDetailsVisible;
+    private bool _isWebServerEnabled;
+    private bool _isWebServerLocalOnly = true;
+    private int _webServerPort = 8085;
+    private string _webServerStatus = string.Empty;
     private bool _isDashboardVisible;
     private string _filterText = string.Empty;
     private readonly HashSet<string> _hiddenSensors = new();
@@ -120,6 +124,9 @@ public sealed class MainWindowViewModel : ObservableObject
         ShowHidden = settings.ShowHidden;
         ShowAdvanced = settings.ShowAdvanced;
         IsDetailsVisible = settings.IsDetailsVisible;
+        WebServerPort = settings.WebServerPort is > 0 and < 65536 ? settings.WebServerPort : 8085;
+        IsWebServerLocalOnly = settings.IsWebServerLocalOnly;
+        IsWebServerEnabled = settings.IsWebServerEnabled;
         IsDashboardVisible = settings.IsDashboardVisible;
         Tiles.Clear();
 
@@ -145,6 +152,9 @@ public sealed class MainWindowViewModel : ObservableObject
             ShowHidden = ShowHidden,
             ShowAdvanced = ShowAdvanced,
             IsDetailsVisible = IsDetailsVisible,
+            IsWebServerEnabled = IsWebServerEnabled,
+            IsWebServerLocalOnly = IsWebServerLocalOnly,
+            WebServerPort = WebServerPort,
             IsDashboardVisible = IsDashboardVisible,
             PinnedSensors = Tiles.Select(tile => tile.Identifier).ToList(),
             HiddenSensors = _hiddenSensors.Order(StringComparer.Ordinal).ToList()
@@ -526,6 +536,54 @@ public sealed class MainWindowViewModel : ObservableObject
             else
                 tile.Update(null, null);
         }
+    }
+
+    /// <summary>
+    /// Gets or sets whether the web server with data.json runs.
+    /// </summary>
+    public bool IsWebServerEnabled
+    {
+        get { return _isWebServerEnabled; }
+        set
+        {
+            if (SetProperty(ref _isWebServerEnabled, value))
+            {
+                SettingsChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether the web server accepts only requests from this computer.
+    /// </summary>
+    public bool IsWebServerLocalOnly
+    {
+        get { return _isWebServerLocalOnly; }
+        set
+        {
+            if (SetProperty(ref _isWebServerLocalOnly, value))
+            {
+                SettingsChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the TCP port of the web server.
+    /// </summary>
+    public int WebServerPort
+    {
+        get { return _webServerPort; }
+        private set { SetProperty(ref _webServerPort, value); }
+    }
+
+    /// <summary>
+    /// Gets or sets the address of data.json or why the web server could not start.
+    /// </summary>
+    public string WebServerStatus
+    {
+        get { return _webServerStatus; }
+        set { SetProperty(ref _webServerStatus, value); }
     }
 
     /// <summary>

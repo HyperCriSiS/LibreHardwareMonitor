@@ -47,6 +47,21 @@ public sealed class ViewSettings
     public List<string> PinnedSensors { get; set; } = [];
 
     /// <summary>
+    /// Gets or sets whether the web server with data.json runs.
+    /// </summary>
+    public bool IsWebServerEnabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the web server accepts only requests from this computer.
+    /// </summary>
+    public bool IsWebServerLocalOnly { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the TCP port of the web server. 8085 is the port of the classic app.
+    /// </summary>
+    public int WebServerPort { get; set; } = 8085;
+
+    /// <summary>
     /// Gets or sets the identifiers of the hidden sensors.
     /// </summary>
     public List<string> HiddenSensors { get; set; } = [];

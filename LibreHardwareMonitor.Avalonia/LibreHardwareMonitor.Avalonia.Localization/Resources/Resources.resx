@@ -91,6 +91,18 @@
   <data name="DashboardEmpty" xml:space="preserve">
     <value>Nothing pinned yet. Right-click a sensor in the tree and choose "Pin to dashboard".</value>
   </data>
+  <data name="OptionsLabel" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="WebServerEnabled" xml:space="preserve">
+    <value>Web server (data.json for other apps)</value>
+  </data>
+  <data name="WebServerLocalOnly" xml:space="preserve">
+    <value>Only from this computer</value>
+  </data>
+  <data name="WebServerFailedFormat" xml:space="preserve">
+    <value>The web server could not start: {0}</value>
+  </data>
   <data name="StatusSearching" xml:space="preserve">
     <value>Searching for sensors...</value>
   </data>
