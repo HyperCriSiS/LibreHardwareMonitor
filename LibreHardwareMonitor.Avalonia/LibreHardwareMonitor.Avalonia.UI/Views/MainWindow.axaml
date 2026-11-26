@@ -17,7 +17,7 @@
                     Title="{x:Static language:Resources.ApplicationTitle}"
                     Icon="{StaticResource LibreHardwareMonitorWindowIcon}"
                     TitleBarIcon="{StaticResource LibreHardwareMonitorTitleBarIcon}"
-                    Width="1180" Height="720"
+                    Width="1240" Height="720"
                     MinWidth="600" MinHeight="400"
                     WindowStartupLocation="CenterScreen">
 
@@ -57,6 +57,8 @@
                     Click="OnMappingClick"/>
             <ToggleButton Content="{x:Static language:Resources.DetailsLabel}"
                           IsChecked="{Binding IsDetailsVisible}"/>
+            <ToggleButton Content="{x:Static language:Resources.DashboardLabel}"
+                          IsChecked="{Binding IsDashboardVisible}"/>
             <Button Content="{x:Static language:Resources.OptionsLabel}">
                 <Button.Flyout>
                     <Flyout Placement="BottomEdgeAlignedRight">
@@ -78,8 +80,59 @@
             </Button>
         </WrapPanel>
 
+        <ScrollViewer Grid.Row="1"
+                      Margin="12"
+                      IsVisible="{Binding IsDashboardVisible}">
+            <Panel>
+                <TextBlock Opacity="0.7"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding !HasTiles}"
+                           Text="{x:Static language:Resources.DashboardEmpty}"/>
+                <ItemsControl ItemsSource="{Binding Tiles}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel ItemSpacing="12"
+                                       LineSpacing="12"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DashboardTileViewModel">
+                            <Border Width="220"
+                                    Padding="12"
+                                    CornerRadius="6"
+                                    BorderThickness="1"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                <Border.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="{x:Static language:Resources.DashboardUnpin}"
+                                                  Click="OnUnpinTileClick"/>
+                                    </ContextMenu>
+                                </Border.ContextMenu>
+                                <StackPanel Spacing="2">
+                                    <TextBlock FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis"
+                                               Text="{Binding Name}"/>
+                                    <TextBlock Opacity="0.7"
+                                               TextTrimming="CharacterEllipsis"
+                                               Text="{Binding HardwareName}"/>
+                                    <TextBlock FontSize="26"
+                                               Text="{Binding Value}"/>
+                                    <Polyline Height="36"
+                                              Width="196"
+                                              StrokeThickness="1.5"
+                                              Stroke="{DynamicResource SystemControlHighlightAccentBrush}"
+                                              Points="{Binding History, Converter={x:Static converters:HistoryPointsConverter.Instance}}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Panel>
+        </ScrollViewer>
+
         <tree:TreeDataGrid Grid.Row="1"
                            Margin="12"
+                           IsVisible="{Binding !IsDashboardVisible}"
                            ItemsSource="{Binding Hardware}"
                            SelectedItem="{Binding SelectedNode, Mode=OneWayToSource}"
                            ExpanderChevronHeight="{data:ScaleFontBinding Path=GlobalFontSize, Source={x:Static global:Global.FontManager}}"
@@ -111,6 +164,11 @@
                               Click="OnHideClick"/>
                     <MenuItem Header="{x:Static language:Resources.ShowSensors}"
                               Click="OnShowClick"/>
+                    <Separator/>
+                    <MenuItem Header="{x:Static language:Resources.DashboardPin}"
+                              Click="OnPinClick"/>
+                    <MenuItem Header="{x:Static language:Resources.DashboardUnpin}"
+                              Click="OnUnpinClick"/>
                 </ContextMenu>
             </tree:TreeDataGrid.ContextMenu>
 
