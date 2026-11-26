@@ -220,6 +220,36 @@
   <data name="SortColumnHint" xml:space="preserve">
     <value>Klicken, um diese Gruppe zu sortieren</value>
   </data>
+  <data name="FamilyNetwork" xml:space="preserve">
+    <value>Netzwerk</value>
+  </data>
+  <data name="FamilyStorage" xml:space="preserve">
+    <value>Laufwerke</value>
+  </data>
+  <data name="KindPhysical" xml:space="preserve">
+    <value>Physisch</value>
+  </data>
+  <data name="KindVirtual" xml:space="preserve">
+    <value>Virtuell</value>
+  </data>
+  <data name="KindFilter" xml:space="preserve">
+    <value>Filter und Systemtreiber</value>
+  </data>
+  <data name="KindSsd" xml:space="preserve">
+    <value>SSD</value>
+  </data>
+  <data name="KindHdd" xml:space="preserve">
+    <value>HDD</value>
+  </data>
+  <data name="KindRemovable" xml:space="preserve">
+    <value>Wechseldatenträger</value>
+  </data>
+  <data name="KindOther" xml:space="preserve">
+    <value>Sonstige</value>
+  </data>
+  <data name="FamilyMemory" xml:space="preserve">
+    <value>Arbeitsspeicher</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Spannungen</value>
   </data>

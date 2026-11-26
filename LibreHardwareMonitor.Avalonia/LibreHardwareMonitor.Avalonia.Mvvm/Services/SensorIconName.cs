@@ -22,6 +22,7 @@ internal static class SensorIconName
             case SensorTreeNodeKind.Computer:
                 return "computer.png";
             case SensorTreeNodeKind.Hardware:
+            case SensorTreeNodeKind.Group:
                 return GetHardwareName(node.HardwareType);
             case SensorTreeNodeKind.Category:
                 return GetCategoryName(node.SensorType);
