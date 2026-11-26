@@ -53,6 +53,15 @@
                                                  IsVisible="{Binding SameValue, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                                  Text="{Binding SameValue}"
                                                  TextWrapping="Wrap"/>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8"
+                                        Margin="0,4,0,0">
+                                <Button Content="{x:Static language:Resources.MappingRename}"
+                                        Click="OnRenameClick"/>
+                                <Button Content="{x:Static language:Resources.MappingHide}"
+                                        IsVisible="{Binding CanHide}"
+                                        Click="OnHideClick"/>
+                            </StackPanel>
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

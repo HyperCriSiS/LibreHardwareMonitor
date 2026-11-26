@@ -181,6 +181,12 @@
   <data name="MappingCanceled" xml:space="preserve">
     <value>Abgebrochen. Die CPU-Last ist beendet.</value>
   </data>
+  <data name="MappingRename" xml:space="preserve">
+    <value>Umbenennen…</value>
+  </data>
+  <data name="MappingHide" xml:space="preserve">
+    <value>Ausblenden</value>
+  </data>
   <data name="MappingDone" xml:space="preserve">
     <value>Fertig. Das sind Vorschläge aus einer Messung, keine Gewissheiten.</value>
   </data>
