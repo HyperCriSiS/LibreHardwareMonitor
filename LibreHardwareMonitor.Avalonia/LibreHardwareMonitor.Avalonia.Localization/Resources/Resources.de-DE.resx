@@ -121,6 +121,12 @@
   <data name="HistoryRangeFormat" xml:space="preserve">
     <value>Niedrigster {0}, höchster {1}</value>
   </data>
+  <data name="UseFahrenheit" xml:space="preserve">
+    <value>Temperaturen in °F</value>
+  </data>
+  <data name="ValueTemperatureFahrenheitFormat" xml:space="preserve">
+    <value>{0:F1} °F</value>
+  </data>
   <data name="GadgetEnabled" xml:space="preserve">
     <value>Gadget mit den angehefteten Sensoren, immer im Vordergrund</value>
   </data>
