@@ -5,11 +5,13 @@
 ### Added
 
 - The sensor mapping can rename a sensor right away, starting with a suggested name, and hide inputs that look unconnected.
+- The MSI MPG Ai1300TS PCIE5 power supply: rail currents, the twelve 12V-2x6 pin currents (GPU Safeguard+), output power, efficiency, temperature and fan. Data from upstream issues 2647 and 2361.
 - A warning in the status bar when PawnIO is missing or outdated, because CPU, motherboard and memory sensors then stay empty. Prompted by upstream issues 2348 and 2363.
 - Temperature names for the MSI MEG Z690 Unify, including both T sensors, PCIe and M.2. Data from upstream issue 1306.
 
 ### Fixed
 
+- After the computer wakes from sleep, the app opens the hardware again, so fans no longer stay at 0 RPM and full duty. Reported in upstream issue 2636.
 - The core VIDs of AMD Zen 4 and Zen 5 CPUs use the SVI3 encoding and no longer read far too low and inverse to the load. Reported in upstream issues 2084 and 1684.
 - Nuvoton NCT6683D, NCT6686D and NCT6687D fans show no value instead of 65535 RPM while the chip has no reading. Reported in upstream issue 2640.
 - NVIDIA GPU fans show no value instead of impossible speeds above 20000 RPM. Reported in upstream issue 1006.
@@ -25,6 +27,7 @@ Changes taken from open pull requests of the original LibreHardwareMonitor proje
 | Support the WireView Pro II Noctua Edition | 2644 | geretti |
 | Add the MOS fan on the ASRock X870E Taichi | 2641 | Betalos |
 | Ignore zero core temperature readings on NVIDIA Blackwell GPUs | 2624 | st7105 |
+| Read the Intel Meteor Lake iGPU temperature from MCHBAR (PawnIO module IntelMCHBAR from the official PawnIO.Modules 0.2.12 release) | 2551 | orizaruk |
 | Show why an NVIDIA GPU limits its clocks (NVML throttle reasons, hidden by default as advanced values) | 2600 | i-rinat |
 | Decode NCT6792D temperatures like the newer Nuvoton chips and add the ASRock B550M-ITX/ac | 2590 | umbertotechnopreneur |
 | Add the ASUS ProArt Z490-CREATOR 10G (adapted: fan names written out) | 2604 | Slion |

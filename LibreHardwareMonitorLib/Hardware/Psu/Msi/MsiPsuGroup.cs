@@ -15,6 +15,13 @@ public class MsiPsuGroup : IGroup
     private static readonly int[] _productIds =
     {
         0x56d4, // MEG Ai1300P
+        0xaa6f, // MPG Ai1300TS PCIE5
+    };
+
+    // PSUs whose telemetry uses the PCIe 5 layout with 12V-2x6 pin currents.
+    private static readonly int[] _pcie5ProductIds =
+    {
+        0xaa6f, // MPG Ai1300TS PCIE5
     };
 
     private static readonly ushort _vendorId = 0x0db0;
@@ -32,7 +39,7 @@ public class MsiPsuGroup : IGroup
         {
             if (_productIds.Contains(dev.ProductID))
             {
-                var device = new MsiPsu(dev, settings, _hardware.Count);
+                var device = new MsiPsu(dev, settings, _hardware.Count, _pcie5ProductIds.Contains(dev.ProductID));
                 _hardware.Add(device);
                 _report.AppendLine($"Device name: {device.Name}");
                 _report.AppendLine();
