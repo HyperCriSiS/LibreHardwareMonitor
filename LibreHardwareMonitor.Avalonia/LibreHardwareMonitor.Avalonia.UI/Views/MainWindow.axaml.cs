@@ -104,10 +104,42 @@ public sealed partial class MainWindow : DecoratedWindow
     /// <param name="e">The key event.</param>
     private void OnTreeKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Delete)
+        if (e.Key == Key.F2)
+        {
+            RenameSelected();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Delete)
         {
             SetSelectedHidden(true);
             e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Renames the selected sensor or hardware.
+    /// </summary>
+    /// <param name="sender">The menu item.</param>
+    /// <param name="e">The click event.</param>
+    private void OnRenameClick(object sender, RoutedEventArgs e)
+    {
+        RenameSelected();
+    }
+
+    /// <summary>
+    /// Asks for a new name of the selected sensor or hardware.
+    /// </summary>
+    private async void RenameSelected()
+    {
+        if (DataContext is MainWindowViewModel viewModel && MainWindowViewModel.CanRename(viewModel.SelectedNode))
+        {
+            SensorTreeNodeViewModel node = viewModel.SelectedNode;
+            string name = await new RenameWindow(node.Name).ShowDialog<string>(this);
+
+            if (name != null)
+            {
+                viewModel.Rename(node, name);
+            }
         }
     }
 
