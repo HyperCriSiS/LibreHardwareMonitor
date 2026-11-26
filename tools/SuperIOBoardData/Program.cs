@@ -183,10 +183,35 @@ static Result Run(MethodInfo method, Chip chip, Manufacturer manufacturer, Model
         return null;
     }
 
+    // A board is special if any read function differs from the ones the configuration sets for an unknown board, even
+    // if a future change defines the special function inside GetBoardSpecificConfiguration itself.
+    MethodInfo[] defaults = DefaultFunctions(method);
     bool special = arguments[13] != null || stub.TouchedHardware ||
-                   arguments.Skip(8).Take(5).Any(argument => argument is Delegate function && !function.Method.Name.Contains("GetBoardSpecificConfiguration", StringComparison.Ordinal));
+                   arguments.Skip(8).Take(5).Select((argument, slot) => (argument as Delegate)?.Method != defaults[slot]).Any(differs => differs);
 
     return new Result((IList<Voltage>)arguments[4], (IList<Temperature>)arguments[5], (IList<Fan>)arguments[6], (IList<Control>)arguments[7], special);
+}
+
+/// <summary>
+/// Gets the read functions the configuration sets for an unknown chip and board, which every plain board keeps.
+/// </summary>
+static MethodInfo[] DefaultFunctions(MethodInfo method)
+{
+    if (DefaultFunctionsCache.Value != null)
+        return DefaultFunctionsCache.Value;
+
+    object[] arguments = [new StubSuperIO(Chip.Unknown, 1), Manufacturer.Unknown, Model.Unknown, 0, null, null, null, null, null, null, null, null, null, null];
+    method.Invoke(null, arguments);
+    DefaultFunctionsCache.Value = arguments.Skip(8).Take(5).Select(argument => ((Delegate)argument).Method).ToArray();
+    return DefaultFunctionsCache.Value;
+}
+
+/// <summary>
+/// Holds the default read functions once they are known.
+/// </summary>
+static class DefaultFunctionsCache
+{
+    public static MethodInfo[] Value { get; set; }
 }
 
 /// <summary>

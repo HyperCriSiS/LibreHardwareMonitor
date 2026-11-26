@@ -29,7 +29,7 @@ internal static class SuperIOBoardData
 {
     private const string ResourceName = "LibreHardwareMonitor.Resources.SuperIOBoards.txt";
 
-    private static readonly Lazy<Dictionary<(Chip, Manufacturer, Model, int), Entry>> Entries = new(() => Parse(ReadResource()));
+    private static readonly Lazy<Dictionary<(Chip, Manufacturer, Model, int), Entry>> Entries = new(Load);
 
     /// <summary>
     /// Gets or sets whether the data is used. The tool that generates and checks the data turns it off to run the code.
@@ -130,6 +130,21 @@ internal static class SuperIOBoardData
     private static float ParseFloat(string text)
     {
         return float.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Reads the embedded data. A damaged file must not stop the motherboard from loading, so the code is used then.
+    /// </summary>
+    private static Dictionary<(Chip, Manufacturer, Model, int), Entry> Load()
+    {
+        try
+        {
+            return Parse(ReadResource());
+        }
+        catch (Exception exception) when (exception is FormatException or OverflowException or IOException)
+        {
+            return new Dictionary<(Chip, Manufacturer, Model, int), Entry>();
+        }
     }
 
     private static string ReadResource()

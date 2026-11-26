@@ -9,6 +9,8 @@
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
+    <!-- CI installs only a newer SDK; let the tool run on its runtime. Run it in Release, where Debug.Assert in the board code is off. -->
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
