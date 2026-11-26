@@ -49,6 +49,8 @@
                      AutomationProperties.Name="{x:Static language:Resources.FilterPlaceholder}"
                      PlaceholderText="{x:Static language:Resources.FilterPlaceholder}"
                      Text="{Binding FilterText}"/>
+            <ToggleButton Content="{x:Static language:Resources.ShowHiddenSensors}"
+                          IsChecked="{Binding ShowHidden}"/>
             <ToggleButton Content="{x:Static language:Resources.DetailsLabel}"
                           IsChecked="{Binding IsDetailsVisible}"/>
         </WrapPanel>
@@ -66,8 +68,20 @@
                            SelectParentOnLeftArrow="True"
                            PreserveSelectionOnCtrlArrowScroll="True"
                            GridLinesVisibility="Horizontal"
-                           SelectionMode="Row"
+                           SelectionMode="Row,Multiple"
+                           KeyDown="OnTreeKeyDown"
+                           SelectionChanged="OnTreeSelectionChanged"
                            ScrollViewer.AllowAutoHide="False">
+            <tree:TreeDataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="{x:Static language:Resources.HideSensors}"
+                              InputGesture="Delete"
+                              Click="OnHideClick"/>
+                    <MenuItem Header="{x:Static language:Resources.ShowSensors}"
+                              Click="OnShowClick"/>
+                </ContextMenu>
+            </tree:TreeDataGrid.ContextMenu>
+
             <tree:TreeDataGrid.Styles>
                 <Style Selector="primitives|TreeDataGridTextCell">
                     <Setter Property="Padding" Value="6,2,10,2"/>
@@ -95,6 +109,7 @@
                                                MaxHeight="16"
                                                Source="{Binding IconName, Converter={StaticResource SensorIconConverter}}"/>
                                         <TextBlock VerticalAlignment="Center"
+                                                   Opacity="{Binding IsHidden, Converter={x:Static converters:HiddenOpacityConverter.Instance}}"
                                                    Text="{Binding Name}"
                                                    TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>

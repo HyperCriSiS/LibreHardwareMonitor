@@ -19,6 +19,7 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
     private string _min;
     private string _max;
     private string _average;
+    private bool _isHidden;
     private bool _isExpanded;
 
     /// <summary>
@@ -109,6 +110,15 @@ public sealed class SensorTreeNodeViewModel : ObservableObject
     {
         get { return _max; }
         private set { SetProperty(ref _max, value); }
+    }
+
+    /// <summary>
+    /// Gets or sets whether the user hid this sensor.
+    /// </summary>
+    public bool IsHidden
+    {
+        get { return _isHidden; }
+        set { SetProperty(ref _isHidden, value); }
     }
 
     /// <summary>

@@ -130,6 +130,15 @@
   <data name="ColumnAverage" xml:space="preserve">
     <value>Durchschnitt</value>
   </data>
+  <data name="HideSensors" xml:space="preserve">
+    <value>Ausblenden</value>
+  </data>
+  <data name="ShowSensors" xml:space="preserve">
+    <value>Einblenden</value>
+  </data>
+  <data name="ShowHiddenSensors" xml:space="preserve">
+    <value>Ausgeblendete zeigen</value>
+  </data>
   <data name="GroupVoltages" xml:space="preserve">
     <value>Spannungen</value>
   </data>
