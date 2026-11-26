@@ -5315,6 +5315,7 @@ internal sealed class SuperIOHardware : Hardware
                         t.Add(new Temperature("Motherboard", 2)); // SYSTIN
                         t.Add(new Temperature("Temperature #8", 8)); // TSENSOR
                         t.Add(new Temperature("CPU", 22)); // PECI_0_CAL
+                        t.Add(new Temperature("Thermistor Sensor", 24));
 
                         f.Add(new Fan("Chassis Fan #1", 0));
                         f.Add(new Fan("CPU Fan", 1));
@@ -5587,7 +5588,7 @@ internal sealed class SuperIOHardware : Hardware
                         t.Add(new Temperature("Temperature #6", 6));
                         t.Add(new Temperature("Temperature #7", 7));
                         t.Add(new Temperature("CPU", 21));
-                        t.Add(new Temperature("Temperature #26", 26));
+                        t.Add(new Temperature("CPU Package", 26));
 
                         for (int i = 0; i < superIO.Fans.Length; i++)
                             f.Add(new Fan("Fan #" + (i + 1), i));
@@ -5777,7 +5778,7 @@ internal sealed class SuperIOHardware : Hardware
 
                         // Depending on the BIOS version, the CPU temperature is at index 21 or 22
                         t.Add(new Temperature("CPU", 21));
-                        t.Add(new Temperature("CPU", 22));
+                        t.Add(new Temperature("CPU #2", 22));
                         t.Add(new Temperature("CPU Package", 26));
 
                         f.Add(new Fan("Chassis Fan", 0));
