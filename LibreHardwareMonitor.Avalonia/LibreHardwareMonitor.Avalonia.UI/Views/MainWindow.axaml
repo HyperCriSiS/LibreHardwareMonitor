@@ -386,11 +386,16 @@
                             Padding="0,4"
                             BorderThickness="0,0,0,1"
                             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-                        <Polyline Height="80"
-                                  Width="236"
-                                  StrokeThickness="1.5"
-                                  Stroke="{DynamicResource SystemControlHighlightAccentBrush}"
-                                  Points="{Binding SelectedHistory, Converter={StaticResource DetailHistoryConverter}}"/>
+                        <!-- The line is drawn at a fixed size and stretched to the width of the pane. -->
+                        <Viewbox Height="80"
+                                 Stretch="Fill">
+                            <Canvas Width="236"
+                                    Height="80">
+                                <Polyline StrokeThickness="1.5"
+                                          Stroke="{DynamicResource SystemControlHighlightAccentBrush}"
+                                          Points="{Binding SelectedHistory, Converter={StaticResource DetailHistoryConverter}}"/>
+                            </Canvas>
+                        </Viewbox>
                     </Border>
                     <TextBlock Opacity="0.7"
                                Text="{Binding SelectedHistoryRange}"/>
