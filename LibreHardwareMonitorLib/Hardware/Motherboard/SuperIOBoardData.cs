@@ -20,7 +20,7 @@ namespace LibreHardwareMonitor.Hardware.Motherboard;
 /// access stay in code. The file is generated from the code in <see cref="SuperIOHardware" /> by the
 /// SuperIOBoardData tool, which also checks that both give the same sensors.
 /// <para>
-/// Format, one field per tab: a line <c>board, chip, manufacturer, Super I/O index, models separated by commas</c>
+/// Format, one field per tab: a line <c>board, chips, manufacturer, Super I/O indices, models</c> (lists separated by commas)
 /// starts an entry, followed by lines <c>v, name, index, Ri, Rf, Vf, hidden (0 or 1)</c>, <c>t, name, index</c>,
 /// <c>f, name, index</c> and <c>c, name, index</c>. Lines starting with # are comments.
 /// </para>
@@ -68,19 +68,27 @@ internal static class SuperIOBoardData
                 case "board" when fields.Length == 5:
                     current = null;
 
-                    if (!Enum.TryParse(fields[1], out Chip chip) ||
-                        !Enum.TryParse(fields[2], out Manufacturer manufacturer) ||
-                        !int.TryParse(fields[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out int index))
-                    {
+                    if (!Enum.TryParse(fields[2], out Manufacturer manufacturer))
                         break;
-                    }
 
                     current = new Entry();
 
-                    foreach (string modelName in fields[4].Split(','))
+                    foreach (string chipName in fields[1].Split(','))
                     {
-                        if (Enum.TryParse(modelName, out Model model))
-                            entries[(chip, manufacturer, model, index)] = current;
+                        if (!Enum.TryParse(chipName, out Chip chip))
+                            continue;
+
+                        foreach (string indexText in fields[3].Split(','))
+                        {
+                            if (!int.TryParse(indexText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int index))
+                                continue;
+
+                            foreach (string modelName in fields[4].Split(','))
+                            {
+                                if (Enum.TryParse(modelName, out Model model))
+                                    entries[(chip, manufacturer, model, index)] = current;
+                            }
+                        }
                     }
 
                     break;

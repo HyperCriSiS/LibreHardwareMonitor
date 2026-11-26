@@ -4,6 +4,7 @@
 
 ### Added
 
+- Super I/O board configurations as data: LibreHardwareMonitorLib/Resources/SuperIOBoards.txt is generated from the board code by tools/SuperIOBoardData and used before it; CI checks that data and code give the same sensors. No sensor changes.
 - CSV logging of the pinned sensors (Options), one line per poll in Documents\LibreHardwareMonitor\Logs, with a new file per day or when the pinned sensors change. No file is created while nothing is pinned, as upstream PR 2586 by Metaray proposed for the classic logger.
 - A hardware report for support requests (Options, Create report): shown for review first, then saved or copied. Serial numbers, asset tags, UUIDs, MAC addresses, the computer name and the user name are removed.
 - A gadget (Options): a small window that stays on top with the pinned sensors; drag it anywhere, its place is kept. Asked for in upstream issue 1768 and others.
