@@ -37,7 +37,14 @@ internal static class SensorTreeReconciler
 
             if (existingIndex < 0)
             {
-                nodes.Insert(index, new SensorTreeNodeViewModel(snapshot));
+                // Appending and moving keeps the tree selection valid. Inserting before a selected
+                // row breaks the selection index path of TreeDataGrid and can throw.
+                nodes.Add(new SensorTreeNodeViewModel(snapshot));
+
+                if (nodes.Count - 1 != index)
+                {
+                    nodes.Move(nodes.Count - 1, index);
+                }
             }
             else
             {
