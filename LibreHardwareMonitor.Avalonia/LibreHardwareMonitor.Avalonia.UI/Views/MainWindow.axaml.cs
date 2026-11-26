@@ -206,6 +206,33 @@ public sealed partial class MainWindow : DecoratedWindow
     }
 
     /// <summary>
+    /// Pins the selected sensors to the dashboard.
+    /// </summary>
+    private void OnPinClick(object sender, RoutedEventArgs e)
+    {
+        (DataContext as MainWindowViewModel)?.SetPinned(_selectedNodes, true);
+    }
+
+    /// <summary>
+    /// Removes the selected sensors from the dashboard.
+    /// </summary>
+    private void OnUnpinClick(object sender, RoutedEventArgs e)
+    {
+        (DataContext as MainWindowViewModel)?.SetPinned(_selectedNodes, false);
+    }
+
+    /// <summary>
+    /// Removes a tile from the dashboard.
+    /// </summary>
+    private void OnUnpinTileClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.DataContext is DashboardTileViewModel tile)
+        {
+            (DataContext as MainWindowViewModel)?.SetPinned([tile.Identifier], false);
+        }
+    }
+
+    /// <summary>
     /// Shows the selected sensors again.
     /// </summary>
     /// <param name="sender">The menu item.</param>

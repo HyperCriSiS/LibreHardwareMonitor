@@ -26,6 +26,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private SensorTreeNodeViewModel _selectedNode;
     private IReadOnlyList<DetailViewModel> _details = [];
     private bool _isDetailsVisible;
+    private bool _isDashboardVisible;
     private string _filterText = string.Empty;
     private readonly HashSet<string> _hiddenSensors = new();
     private bool _showHidden;
@@ -119,6 +120,15 @@ public sealed class MainWindowViewModel : ObservableObject
         ShowHidden = settings.ShowHidden;
         ShowAdvanced = settings.ShowAdvanced;
         IsDetailsVisible = settings.IsDetailsVisible;
+        IsDashboardVisible = settings.IsDashboardVisible;
+        Tiles.Clear();
+
+        foreach (string identifier in (settings.PinnedSensors ?? []).Distinct())
+        {
+            Tiles.Add(new DashboardTileViewModel(identifier));
+        }
+
+        OnPropertyChanged(nameof(HasTiles));
         UpdateTree();
     }
 
@@ -135,6 +145,8 @@ public sealed class MainWindowViewModel : ObservableObject
             ShowHidden = ShowHidden,
             ShowAdvanced = ShowAdvanced,
             IsDetailsVisible = IsDetailsVisible,
+            IsDashboardVisible = IsDashboardVisible,
+            PinnedSensors = Tiles.Select(tile => tile.Identifier).ToList(),
             HiddenSensors = _hiddenSensors.Order(StringComparer.Ordinal).ToList()
         };
     }
@@ -422,6 +434,101 @@ public sealed class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Gets or sets whether the dashboard is shown instead of the sensor tree.
+    /// </summary>
+    public bool IsDashboardVisible
+    {
+        get { return _isDashboardVisible; }
+        set
+        {
+            if (SetProperty(ref _isDashboardVisible, value))
+            {
+                SettingsChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the sensors pinned to the dashboard.
+    /// </summary>
+    public ObservableCollection<DashboardTileViewModel> Tiles { get; } = new();
+
+    /// <summary>
+    /// Gets whether any sensor is pinned to the dashboard.
+    /// </summary>
+    public bool HasTiles => Tiles.Count > 0;
+
+    /// <summary>
+    /// Pins the given sensors to the dashboard or removes them, including all sensors below hardware and categories.
+    /// </summary>
+    /// <param name="nodes">The selected nodes.</param>
+    /// <param name="isPinned">True to pin the sensors, false to remove them.</param>
+    public void SetPinned(IEnumerable<SensorTreeNodeViewModel> nodes, bool isPinned)
+    {
+        SetPinned(nodes.SelectMany(GetSensorIdentifiers), isPinned);
+    }
+
+    /// <summary>
+    /// Pins sensors to the dashboard or removes them by identifier.
+    /// </summary>
+    /// <param name="identifiers">The sensor identifiers.</param>
+    /// <param name="isPinned">True to pin the sensors, false to remove them.</param>
+    public void SetPinned(IEnumerable<string> identifiers, bool isPinned)
+    {
+        foreach (string identifier in identifiers.ToList())
+        {
+            DashboardTileViewModel tile = Tiles.FirstOrDefault(item => item.Identifier == identifier);
+
+            if (isPinned && tile == null)
+            {
+                Tiles.Add(new DashboardTileViewModel(identifier));
+            }
+            else if (!isPinned && tile != null)
+            {
+                Tiles.Remove(tile);
+            }
+        }
+
+        OnPropertyChanged(nameof(HasTiles));
+        UpdateDashboard();
+        SettingsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Shows the latest readings on the dashboard tiles.
+    /// </summary>
+    private void UpdateDashboard()
+    {
+        if (_snapshot == null || Tiles.Count == 0)
+            return;
+
+        Dictionary<string, (SensorTreeNodeSnapshot Sensor, string Hardware)> sensors = new();
+
+        void Collect(SensorTreeNodeSnapshot node, string hardware)
+        {
+            if (node.Kind == SensorTreeNodeKind.Hardware)
+                hardware = node.Name;
+
+            if (node.Kind == SensorTreeNodeKind.Sensor)
+                sensors.TryAdd(node.Identifier, (node, hardware));
+
+            foreach (SensorTreeNodeSnapshot child in node.Children)
+                Collect(child, hardware);
+        }
+
+        foreach (SensorTreeNodeSnapshot root in _snapshot.Roots)
+            Collect(root, null);
+
+        foreach (DashboardTileViewModel tile in Tiles)
+        {
+            if (sensors.TryGetValue(tile.Identifier, out (SensorTreeNodeSnapshot Sensor, string Hardware) found))
+                tile.Update(found.Sensor, found.Hardware);
+            else
+                tile.Update(null, null);
+        }
+    }
+
+    /// <summary>
     /// Gets the latest localized monitoring status.
     /// </summary>
     public string Status
@@ -448,6 +555,7 @@ public sealed class MainWindowViewModel : ObservableObject
         _snapshot = snapshot;
         Mapping.Record(snapshot);
         UpdateTree();
+        UpdateDashboard();
 
         string format = snapshot.Roots.Count > 0 && snapshot.Roots[0].Children.Count == 0
             ? LanguageResources.StatusUpdatedNoHardwareFormat
