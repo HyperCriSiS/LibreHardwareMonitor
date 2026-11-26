@@ -142,6 +142,9 @@ public sealed class SensorMappingViewModel : ObservableObject
     private void ShowResults(IReadOnlyList<SensorMappingSuggestion> suggestions)
     {
         Results = suggestions.Select(suggestion => new SensorMappingResultViewModel(
+                                 suggestion.Identifier,
+                                 GetSuggestedName(suggestion),
+                                 suggestion.Kind is SensorMappingKind.NotConnected or SensorMappingKind.Constant,
                                  suggestion.HardwareName + ": " + suggestion.Name,
                                  GetDescription(suggestion.Kind),
                                  suggestion.Rise.HasValue
@@ -153,6 +156,20 @@ public sealed class SensorMappingViewModel : ObservableObject
                              .ToList();
 
         Status = suggestions.Count > 0 ? LanguageResources.MappingDone : LanguageResources.MappingNoSensors;
+    }
+
+    /// <summary>
+    /// Gets a name to start renaming with. Sensor names stay in English like the names from the hardware library.
+    /// </summary>
+    private static string GetSuggestedName(SensorMappingSuggestion suggestion)
+    {
+        switch (suggestion.Kind)
+        {
+            case SensorMappingKind.FollowsCpu: return "CPU Socket";
+            case SensorMappingKind.WarmsWithCpu: return "VRM";
+            case SensorMappingKind.IndependentOfCpu: return "System";
+            default: return suggestion.Name;
+        }
     }
 
     /// <summary>
@@ -213,8 +230,17 @@ public sealed class SensorMappingViewModel : ObservableObject
 /// <summary>
 /// Represents one suggestion of the sensor mapping assistant.
 /// </summary>
+/// <param name="Identifier">The sensor identifier.</param>
+/// <param name="SuggestedName">A name to start renaming with.</param>
+/// <param name="CanHide">Whether the sensor looks unused and hiding it is offered.</param>
 /// <param name="Sensor">The sensor and its chip.</param>
 /// <param name="Description">What the sensor likely measures.</param>
 /// <param name="Rise">The measured rise under load.</param>
 /// <param name="SameValue">A sensor of another chip with the same reading.</param>
-public sealed record SensorMappingResultViewModel(string Sensor, string Description, string Rise, string SameValue);
+public sealed record SensorMappingResultViewModel(string Identifier,
+    string SuggestedName,
+    bool CanHide,
+    string Sensor,
+    string Description,
+    string Rise,
+    string SameValue);
