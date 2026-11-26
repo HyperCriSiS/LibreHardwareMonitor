@@ -959,9 +959,10 @@ internal sealed class Amd17Cpu : AmdCpu
                 _clock.Value = CoreClock > 0 ? (float)CoreClock : null;
             }
 
-            // Vcore voltage, unknown if the P-state status could not be read
-            const double vidStep = 0.00625;
-            double vcc = 1.550 - (vidStep * curCpuVid);
+            // Vcore voltage, unknown if the P-state status could not be read.
+            // Zen 4 and Zen 5 encode the VID for SVI3: 0.245 V plus 5 mV per step. Older Zen use SVI2: 1.55 V minus 6.25 mV per step.
+            bool isSvi3 = _cpu._family == 0x1A || _cpu._family == 0x19 && _cpu._model >= 0x60;
+            double vcc = isSvi3 ? 0.245 + (0.005 * curCpuVid) : 1.550 - (0.00625 * curCpuVid);
             _vcore.Value = msrPstate != 0 ? (float)vcc : null;
 
             // core power consumption
