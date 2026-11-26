@@ -91,6 +91,18 @@
   <data name="DashboardEmpty" xml:space="preserve">
     <value>Noch nichts angeheftet. Rechtsklick auf einen Sensor im Baum und "An Dashboard anheften" wählen.</value>
   </data>
+  <data name="OptionsLabel" xml:space="preserve">
+    <value>Optionen</value>
+  </data>
+  <data name="WebServerEnabled" xml:space="preserve">
+    <value>Webserver (data.json für andere Programme)</value>
+  </data>
+  <data name="WebServerLocalOnly" xml:space="preserve">
+    <value>Nur von diesem Computer</value>
+  </data>
+  <data name="WebServerFailedFormat" xml:space="preserve">
+    <value>Der Webserver konnte nicht starten: {0}</value>
+  </data>
   <data name="HistoryLabel" xml:space="preserve">
     <value>Verlauf (letzte 5 Minuten)</value>
   </data>

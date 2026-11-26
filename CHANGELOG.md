@@ -5,6 +5,7 @@
 ### Added
 
 - A history of the selected sensor in the details pane: the last five minutes as a line with the lowest and highest reading.
+- A read-only web server for other apps (Options, off by default): data.json in the format of the classic app on port 8085, only from this computer unless that option is turned off. Asked for in upstream issue 1035 and others.
 - The sensor mapping can rename a sensor right away, starting with a suggested name, and hide inputs that look unconnected.
 - A dashboard: pin sensors from the tree (context menu) and see them as tiles with the current value and the last minute as a line. Pinned sensors and the view are kept between sessions.
 - The MSI MPG Ai1300TS PCIE5 power supply: rail currents, the twelve 12V-2x6 pin currents (GPU Safeguard+), output power, efficiency, temperature and fan. Data from upstream issues 2647 and 2361.
@@ -13,6 +14,7 @@
 
 ### Fixed
 
+- CPU load sensors get unique identifiers and correct values on systems with more than 64 logical processors, and every CPU of a multi-socket system shows its thread loads. Reported in upstream issue 1703.
 - IPMI no longer fails when the board controller answers the SDR repository request with a completion code only. Reported in upstream issue 2599.
 - Intel CPU power is read on its own package, so systems with several CPUs no longer show hundreds of thousands of watts. Reported in upstream issue 2018.
 - After the computer wakes from sleep, the app opens the hardware again, so fans no longer stay at 0 RPM and full duty. Reported in upstream issue 2636.
