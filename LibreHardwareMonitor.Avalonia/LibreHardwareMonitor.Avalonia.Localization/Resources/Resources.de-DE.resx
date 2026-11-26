@@ -115,6 +115,12 @@
   <data name="TrayExit" xml:space="preserve">
     <value>Beenden</value>
   </data>
+  <data name="HistoryLabel" xml:space="preserve">
+    <value>Verlauf (letzte 5 Minuten)</value>
+  </data>
+  <data name="HistoryRangeFormat" xml:space="preserve">
+    <value>Niedrigster {0}, höchster {1}</value>
+  </data>
   <data name="ReportOpen" xml:space="preserve">
     <value>Bericht erstellen…</value>
   </data>

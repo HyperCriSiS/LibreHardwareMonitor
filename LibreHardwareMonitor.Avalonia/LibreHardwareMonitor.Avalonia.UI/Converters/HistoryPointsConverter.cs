@@ -8,24 +8,30 @@ using LibreHardwareMonitor.Avalonia.Mvvm.ViewModels;
 namespace LibreHardwareMonitor.Avalonia.UI.Converters;
 
 /// <summary>
-/// Converts the readings of a dashboard tile into the points of a small history line.
+/// Converts recent readings into the points of a history line.
 /// </summary>
 public sealed class HistoryPointsConverter : IValueConverter
 {
     /// <summary>
-    /// The width of the history line.
-    /// </summary>
-    public const double Width = 196;
-
-    /// <summary>
-    /// The height of the history line.
-    /// </summary>
-    public const double Height = 36;
-
-    /// <summary>
-    /// Gets the shared converter instance.
+    /// Gets the converter for the small line on dashboard tiles.
     /// </summary>
     public static HistoryPointsConverter Instance { get; } = new();
+
+    /// <summary>
+    /// Gets or sets the width of the line.
+    /// </summary>
+    public double Width { get; set; } = 196;
+
+    /// <summary>
+    /// Gets or sets the height of the line.
+    /// </summary>
+    public double Height { get; set; } = 36;
+
+    /// <summary>
+    /// Gets or sets how many readings fill the full width; fewer readings start further right. 0 stretches the
+    /// available readings over the full width.
+    /// </summary>
+    public int Length { get; set; } = DashboardTileViewModel.HistoryLength;
 
     /// <summary>
     /// Scales the readings to the line, with the lowest reading at the bottom and the highest at the top.
@@ -44,7 +50,7 @@ public sealed class HistoryPointsConverter : IValueConverter
 
         float min = history.Min();
         float range = history.Max() - min;
-        double step = Width / (DashboardTileViewModel.HistoryLength - 1);
+        double step = Width / ((Length > 0 ? Math.Max(Length, history.Count) : history.Count) - 1);
         double start = Width - (step * (history.Count - 1));
 
         for (int i = 0; i < history.Count; i++)
