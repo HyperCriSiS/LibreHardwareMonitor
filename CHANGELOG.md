@@ -26,6 +26,7 @@ Changes taken from open pull requests of the original LibreHardwareMonitor proje
 | Support the WireView Pro II Noctua Edition | 2644 | geretti |
 | Add the MOS fan on the ASRock X870E Taichi | 2641 | Betalos |
 | Ignore zero core temperature readings on NVIDIA Blackwell GPUs | 2624 | st7105 |
+| Read the Intel Meteor Lake iGPU temperature from MCHBAR (PawnIO module IntelMCHBAR from the official PawnIO.Modules 0.2.12 release) | 2551 | orizaruk |
 | Show why an NVIDIA GPU limits its clocks (NVML throttle reasons, hidden by default as advanced values) | 2600 | i-rinat |
 | Decode NCT6792D temperatures like the newer Nuvoton chips and add the ASRock B550M-ITX/ac | 2590 | umbertotechnopreneur |
 | Add the ASUS ProArt Z490-CREATOR 10G (adapted: fan names written out) | 2604 | Slion |
