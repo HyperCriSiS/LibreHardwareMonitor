@@ -115,6 +115,12 @@
   <data name="TrayExit" xml:space="preserve">
     <value>Exit</value>
   </data>
+  <data name="HistoryLabel" xml:space="preserve">
+    <value>History (last 5 minutes)</value>
+  </data>
+  <data name="HistoryRangeFormat" xml:space="preserve">
+    <value>Lowest {0}, highest {1}</value>
+  </data>
   <data name="LoggingEnabled" xml:space="preserve">
     <value>Write the pinned sensors to CSV files</value>
   </data>
