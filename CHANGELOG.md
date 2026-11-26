@@ -4,7 +4,7 @@
 
 ### Added
 
-- Super I/O board configurations as data: LibreHardwareMonitorLib/Resources/SuperIOBoards.txt is generated from the board code by tools/SuperIOBoardData and used before it; CI checks that data and code give the same sensors. No sensor changes.
+- Super I/O board configurations as data: the sensor lists of about 400 boards moved from SuperIOHardware.cs (6600 to 1150 lines) to LibreHardwareMonitorLib/Resources/SuperIOBoards.txt, so a new board is a few lines there. Boards with their own read functions, a mutex or GPIO access stay in code. tools/SuperIOBoardData checks the file in CI and can record the full board configuration before and after a refactor. No sensor changes.
 - The details pane can be made wider or narrower by dragging its left edge; the width is kept between sessions.
 - Board files: JSON files in Documents\LibreHardwareMonitor\Boards name or hide sensors of a motherboard without a new release; your own renames always win. See docs/board-files.md.
 - CSV logging of the pinned sensors (Options), one line per poll in Documents\LibreHardwareMonitor\Logs, with a new file per day or when the pinned sensors change. No file is created while nothing is pinned, as upstream PR 2586 by Metaray proposed for the classic logger.

@@ -17,8 +17,8 @@ namespace LibreHardwareMonitor.Hardware.Motherboard;
 /// <remarks>
 /// The data only names sensors, picks chip inputs by index and sets the voltage scaling; it never contains register
 /// addresses or anything that writes to the hardware. Boards that need their own read functions, a mutex or GPIO
-/// access stay in code. The file is generated from the code in <see cref="SuperIOHardware" /> by the
-/// SuperIOBoardData tool, which also checks that both give the same sensors.
+/// access stay in code in <see cref="SuperIOHardware" />. The SuperIOBoardData tool checks that the file parses and that
+/// no board is defined in both places.
 /// <para>
 /// Format, one field per tab: a line <c>board, chips, manufacturer, Super I/O indices, models</c> (lists separated by commas)
 /// starts an entry, followed by lines <c>v, name, index, Ri, Rf, Vf, hidden (0 or 1)</c>, <c>t, name, index</c>,
@@ -32,7 +32,7 @@ internal static class SuperIOBoardData
     private static readonly Lazy<Dictionary<(Chip, Manufacturer, Model, int), Entry>> Entries = new(Load);
 
     /// <summary>
-    /// Gets or sets whether the data is used. The tool that generates and checks the data turns it off to run the code.
+    /// Gets or sets whether the data is used. The tool that checks the data turns it off to run the code alone.
     /// </summary>
     internal static bool Enabled { get; set; } = true;
 
