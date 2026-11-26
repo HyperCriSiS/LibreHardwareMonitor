@@ -120,6 +120,7 @@ public class GenericCpu : Hardware
             AddProperty("Family", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", _family));
             AddProperty("Model", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", _model));
             AddProperty("Stepping", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", _stepping));
+            AddProperty("Cores", _coreCount.ToString(CultureInfo.InvariantCulture));
             AddProperty("Threads", _threadCount.ToString(CultureInfo.InvariantCulture));
 
             return properties;
