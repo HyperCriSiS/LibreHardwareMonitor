@@ -139,6 +139,24 @@
   <data name="GadgetEmpty" xml:space="preserve">
     <value>Sensoren im Baum anheften, um sie hier zu zeigen.</value>
   </data>
+  <data name="ReportOpen" xml:space="preserve">
+    <value>Bericht erstellen…</value>
+  </data>
+  <data name="ReportTitle" xml:space="preserve">
+    <value>Hardware-Bericht</value>
+  </data>
+  <data name="ReportHint" xml:space="preserve">
+    <value>Dieser Bericht hilft, deine Hardware zu unterstützen. Seriennummern, Inventarnummern, UUIDs, MAC-Adressen, Rechnername und Benutzername sind entfernt. Bitte prüfe ihn, bevor du ihn weitergibst.</value>
+  </data>
+  <data name="ReportCopy" xml:space="preserve">
+    <value>Kopieren</value>
+  </data>
+  <data name="ReportSave" xml:space="preserve">
+    <value>Speichern…</value>
+  </data>
+  <data name="ReportClose" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
   <data name="LoggingEnabled" xml:space="preserve">
     <value>Angeheftete Sensoren in CSV-Dateien protokollieren</value>
   </data>

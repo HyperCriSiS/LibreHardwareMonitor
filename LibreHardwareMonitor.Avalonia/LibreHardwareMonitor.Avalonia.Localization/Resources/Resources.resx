@@ -139,6 +139,24 @@
   <data name="GadgetEmpty" xml:space="preserve">
     <value>Pin sensors in the tree to show them here.</value>
   </data>
+  <data name="ReportOpen" xml:space="preserve">
+    <value>Create report…</value>
+  </data>
+  <data name="ReportTitle" xml:space="preserve">
+    <value>Hardware report</value>
+  </data>
+  <data name="ReportHint" xml:space="preserve">
+    <value>This report helps to add support for your hardware. Serial numbers, asset tags, UUIDs, MAC addresses, the computer name and the user name are removed. Please check it before you share it.</value>
+  </data>
+  <data name="ReportCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="ReportSave" xml:space="preserve">
+    <value>Save…</value>
+  </data>
+  <data name="ReportClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
   <data name="LoggingEnabled" xml:space="preserve">
     <value>Write the pinned sensors to CSV files</value>
   </data>

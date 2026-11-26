@@ -102,6 +102,17 @@ public sealed partial class MainWindow : DecoratedWindow
     }
 
     /// <summary>
+    /// Shows the anonymized hardware report for review before it is saved or copied.
+    /// </summary>
+    private async void OnReportClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel { ReportProvider: { } provider })
+        {
+            new ReportWindow(await provider()).Show(this);
+        }
+    }
+
+    /// <summary>
     /// Opens the folder with the CSV logs in the file manager.
     /// </summary>
     private void OnOpenLogFolderClick(object sender, RoutedEventArgs e)

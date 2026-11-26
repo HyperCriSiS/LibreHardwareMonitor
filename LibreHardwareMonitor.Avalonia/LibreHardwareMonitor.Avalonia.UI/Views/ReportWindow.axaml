@@ -1,0 +1,41 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<Window x:Class="LibreHardwareMonitor.Avalonia.UI.Views.ReportWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:language="using:LibreHardwareMonitor.Avalonia.Localization.Resources"
+        Title="{x:Static language:Resources.ReportTitle}"
+        Icon="{StaticResource LibreHardwareMonitorWindowIcon}"
+        Width="820" Height="640"
+        MinWidth="480" MinHeight="320"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        <TextBlock Grid.Row="0"
+                   Margin="0,0,0,8"
+                   TextWrapping="Wrap"
+                   Text="{x:Static language:Resources.ReportHint}"/>
+        <TextBox x:Name="ReportBox"
+                 Grid.Row="1"
+                 IsReadOnly="True"
+                 AcceptsReturn="True"
+                 TextWrapping="NoWrap"
+                 FontFamily="Consolas, Cascadia Mono, monospace"
+                 AutomationProperties.Name="{x:Static language:Resources.ReportTitle}"/>
+        <StackPanel Grid.Row="2"
+                    Margin="0,12,0,0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button Content="{x:Static language:Resources.ReportCopy}"
+                    Click="OnCopyClick"/>
+            <Button Content="{x:Static language:Resources.ReportSave}"
+                    IsDefault="True"
+                    Click="OnSaveClick"/>
+            <Button Content="{x:Static language:Resources.ReportClose}"
+                    IsCancel="True"
+                    Click="OnCloseClick"/>
+        </StackPanel>
+    </Grid>
+
+</Window>
