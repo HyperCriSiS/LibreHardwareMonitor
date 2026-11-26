@@ -110,6 +110,28 @@ public class GenericCpu : Hardware
     /// </summary>
     public CpuId[][] CpuId => _cpuId;
 
+    /// <summary>
+    /// Lists the cores from the most to the least preferred, as ranked by the firmware and reported by Windows.
+    /// </summary>
+    /// <returns>The ranking, or null if all cores are equal or the ranking is unavailable.</returns>
+    private string GetPreferredCores()
+    {
+        IReadOnlyDictionary<(int Group, int Index), byte> classes = CpuSchedulingClass.Read();
+
+        List<(int Core, int Class)> ranking = [];
+        for (int i = 0; i < _cpuId.Length; i++)
+        {
+            CpuId thread = _cpuId[i][0];
+            if (classes.TryGetValue((thread.Group, thread.Thread), out byte schedulingClass))
+                ranking.Add((i + 1, schedulingClass));
+        }
+
+        if (ranking.Count != _cpuId.Length || ranking.Select(r => r.Class).Distinct().Count() < 2)
+            return null;
+
+        return string.Join(", ", ranking.OrderByDescending(r => r.Class).ThenBy(r => r.Core).Select(r => "#" + r.Core));
+    }
+
     public override IDictionary<string, string> Properties
     {
         get
@@ -122,6 +144,7 @@ public class GenericCpu : Hardware
             AddProperty("Stepping", string.Format(CultureInfo.InvariantCulture, "0x{0:X}", _stepping));
             AddProperty("Cores", _coreCount.ToString(CultureInfo.InvariantCulture));
             AddProperty("Threads", _threadCount.ToString(CultureInfo.InvariantCulture));
+            AddProperty("Preferred cores", GetPreferredCores());
 
             return properties;
 
