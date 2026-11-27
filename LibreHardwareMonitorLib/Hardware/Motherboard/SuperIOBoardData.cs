@@ -116,7 +116,7 @@ internal static class SuperIOBoardData
         {
             foreach (string manufacturerName in fields[2].Split(','))
             {
-                if (Enum.TryParse(manufacturerName, out Manufacturer manufacturer))
+                if (TryParseName(manufacturerName, out Manufacturer manufacturer))
                     manufacturers.Add(manufacturer);
                 else
                     error($"unknown manufacturer {manufacturerName}.");
@@ -125,7 +125,7 @@ internal static class SuperIOBoardData
 
         foreach (string chipName in fields[1].Split(','))
         {
-            if (!Enum.TryParse(chipName, out Chip chip))
+            if (!TryParseName(chipName, out Chip chip))
             {
                 error($"unknown chip {chipName}.");
                 continue;
@@ -141,7 +141,7 @@ internal static class SuperIOBoardData
 
                 foreach (string modelName in fields[4].Split(','))
                 {
-                    if (!Enum.TryParse(modelName, out Model model))
+                    if (!TryParseName(modelName, out Model model))
                     {
                         error($"unknown model {modelName}.");
                         continue;
@@ -165,6 +165,12 @@ internal static class SuperIOBoardData
     {
         list.Add(item);
         return true;
+    }
+
+    private static bool TryParseName<T>(string text, out T value) where T : struct
+    {
+        // Only names: a number would parse to a value that the enum does not define.
+        return Enum.TryParse(text, out value) && Enum.IsDefined(typeof(T), value) && text.Trim()[0] is '_' or (>= 'A' and <= 'Z') or (>= 'a' and <= 'z');
     }
 
     private static bool TryParseInt(string text, out int value)
