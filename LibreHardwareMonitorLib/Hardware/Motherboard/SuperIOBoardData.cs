@@ -21,7 +21,7 @@ namespace LibreHardwareMonitor.Hardware.Motherboard;
 /// no board is defined in both places.
 /// <para>
 /// Format, one field per tab: a line <c>board, chips, manufacturers, Super I/O indices, models</c> (lists separated by commas,
-/// <c>*</c> for every manufacturer) starts an entry, followed by lines <c>v, name, index, Ri, Rf, Vf, hidden (0 or 1)</c>, <c>t, name, index</c>,
+/// <c>*</c> for every manufacturer; a board without a model is written as its SMBIOS product name in quotes) starts an entry, followed by lines <c>v, name, index, Ri, Rf, Vf, hidden (0 or 1)</c>, <c>t, name, index</c>,
 /// <c>f, name, index</c> and <c>c, name, index</c>. Lines starting with # are comments.
 /// </para>
 /// </remarks>
@@ -34,7 +34,7 @@ internal static class SuperIOBoardData
 
     private const string ResourceName = "LibreHardwareMonitor.Resources.SuperIOBoards.txt";
 
-    private static readonly Lazy<Dictionary<(Chip, Manufacturer, Model, int), Entry>> Entries = new(Load);
+    private static readonly Lazy<Boards> Entries = new(Load);
 
     /// <summary>
     /// Gets or sets whether the data is used. The tool that checks the data turns it off to run the code alone.
@@ -42,12 +42,14 @@ internal static class SuperIOBoardData
     internal static bool Enabled { get; set; } = true;
 
     /// <summary>
-    /// Gets the sensor lists of a board, if the data describes it.
+    /// Gets the sensor lists of a board, if the data describes it by its model or, for a board without one, by its product name.
     /// </summary>
-    internal static bool TryGet(Chip chip, Manufacturer manufacturer, Model model, int superIOIndex, out Entry entry)
+    internal static bool TryGet(Chip chip, Manufacturer manufacturer, Model model, string productName, int superIOIndex, out Entry entry)
     {
         entry = null;
-        return Enabled && Entries.Value.TryGetValue((chip, manufacturer, model, superIOIndex), out entry);
+        return Enabled &&
+               (Entries.Value.Models.TryGetValue((chip, manufacturer, model, superIOIndex), out entry) ||
+                model == Model.Unknown && productName != null && Entries.Value.Names.TryGetValue((chip, manufacturer, NormalizeProductName(productName), superIOIndex), out entry));
     }
 
     /// <summary>
@@ -55,10 +57,10 @@ internal static class SuperIOBoardData
     /// </summary>
     /// <param name="text">The file content.</param>
     /// <param name="errors">Receives a message for every skipped line, unknown name and board defined twice, if given.</param>
-    /// <returns>The entries by chip, manufacturer, model and Super I/O index.</returns>
-    internal static Dictionary<(Chip, Manufacturer, Model, int), Entry> Parse(string text, List<string> errors = null)
+    /// <returns>The entries by chip, manufacturer, model or product name and Super I/O index.</returns>
+    internal static Boards Parse(string text, List<string> errors = null)
     {
-        Dictionary<(Chip, Manufacturer, Model, int), Entry> entries = new();
+        Boards entries = new();
         Entry current = null;
         string[] lines = (text ?? string.Empty).Split('\n');
 
@@ -96,7 +98,25 @@ internal static class SuperIOBoardData
         return value.ToString("R", CultureInfo.InvariantCulture);
     }
 
-    private static bool TryParseBoard(string[] fields, Dictionary<(Chip, Manufacturer, Model, int), Entry> entries, out Entry entry, Action<string> error)
+    /// <summary>
+    /// Gets the product name of a board as SMBIOS reports it, in the case-insensitive form the data is looked up in.
+    /// </summary>
+    internal static string NormalizeProductName(string name)
+    {
+        return name?.Trim().ToUpperInvariant();
+    }
+
+    private static string GetProductName(string field)
+    {
+        // A product name in quotes; quotes inside it are not supported, and commas separate the boards of a line.
+        if (field.Length < 3 || field[0] != '"' || field[field.Length - 1] != '"')
+            return null;
+
+        string name = NormalizeProductName(field.Substring(1, field.Length - 2));
+        return name.Length == 0 || name.IndexOf('"') >= 0 ? null : name;
+    }
+
+    private static bool TryParseBoard(string[] fields, Boards entries, out Entry entry, Action<string> error)
     {
         // The sensor lines of a board with an unknown name still go into an entry, so they are not reported again.
         entry = new Entry();
@@ -141,7 +161,10 @@ internal static class SuperIOBoardData
 
                 foreach (string modelName in fields[4].Split(','))
                 {
-                    if (!TryParseName(modelName, out Model model))
+                    string productName = GetProductName(modelName);
+                    Model model = Model.Unknown;
+                    // Unknown stands for every board without a model, so it would hide their generic sensors and product names.
+                    if (productName == null && (!TryParseName(modelName, out model) || model == Model.Unknown))
                     {
                         error($"unknown model {modelName}.");
                         continue;
@@ -149,10 +172,12 @@ internal static class SuperIOBoardData
 
                     foreach (Manufacturer manufacturer in manufacturers)
                     {
-                        if (entries.ContainsKey((chip, manufacturer, model, index)))
-                            error($"{chip} {manufacturer} {model} {index} is defined twice.");
+                        if (productName == null ? entries.Models.ContainsKey((chip, manufacturer, model, index)) : entries.Names.ContainsKey((chip, manufacturer, productName, index)))
+                            error($"{chip} {manufacturer} {productName ?? model.ToString()} {index} is defined twice.");
+                        else if (productName == null)
+                            entries.Models[(chip, manufacturer, model, index)] = entry;
                         else
-                            entries[(chip, manufacturer, model, index)] = entry;
+                            entries.Names[(chip, manufacturer, productName, index)] = entry;
                     }
                 }
             }
@@ -186,13 +211,13 @@ internal static class SuperIOBoardData
     /// <summary>
     /// Gets the entries read from the embedded data.
     /// </summary>
-    internal static Dictionary<(Chip, Manufacturer, Model, int), Entry> Embedded => Entries.Value;
+    internal static Boards Embedded => Entries.Value;
 
     /// <summary>
     /// Reads the embedded data. A file that cannot be read must not stop the motherboard from loading; its boards then
     /// get the generic sensors of their chip.
     /// </summary>
-    private static Dictionary<(Chip, Manufacturer, Model, int), Entry> Load()
+    private static Boards Load()
     {
         try
         {
@@ -200,7 +225,7 @@ internal static class SuperIOBoardData
         }
         catch (IOException)
         {
-            return new Dictionary<(Chip, Manufacturer, Model, int), Entry>();
+            return new Boards();
         }
     }
 
@@ -212,6 +237,19 @@ internal static class SuperIOBoardData
 
         using StreamReader reader = new(stream);
         return reader.ReadToEnd();
+    }
+
+    /// <summary>
+    /// The boards of the data, by model and by product name.
+    /// </summary>
+    internal sealed class Boards
+    {
+        public Dictionary<(Chip, Manufacturer, Model, int), Entry> Models { get; } = new();
+
+        /// <summary>
+        /// Gets the boards that have no model, by their product name in the form of <see cref="NormalizeProductName" />.
+        /// </summary>
+        public Dictionary<(Chip, Manufacturer, string, int), Entry> Names { get; } = new();
     }
 
     /// <summary>

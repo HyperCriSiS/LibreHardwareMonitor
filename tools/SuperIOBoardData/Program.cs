@@ -57,20 +57,33 @@ switch (args[0])
         }
 
         // Each board is defined in one place: the code must give the generic configuration for every board in the data,
-        // and must run, so the data cannot replace chips with sensors of their own such as IPMI.
-        SuperIOBoardData.Enabled = false;
+        // and must run, so the data cannot replace chips with sensors of their own such as IPMI. The data only replaces the
+        // sensor lists, so the generic configuration must not need read functions, a mutex or hardware access of its own.
+        // A product name is only for boards without a model, so a board is not known by two names.
         int failures = 0;
-        foreach ((Chip chip, Manufacturer manufacturer, Model model, int index) in entries.Keys)
+        var keys = entries.Models.Keys.Select(key => (key.Item1, key.Item2, key.Item3, Name: (string)null, key.Item4))
+                          .Concat(entries.Names.Keys.Select(key => (key.Item1, key.Item2, Model.Unknown, Name: key.Item3, key.Item4)));
+
+        foreach ((Chip chip, Manufacturer manufacturer, Model model, string name, int index) in keys)
         {
-            string generic = Run(method, chip, manufacturer, Model.Unknown, index, MaxChannels);
-            if (generic.StartsWith("error", StringComparison.Ordinal))
+            string board = $"{chip} {manufacturer} {name ?? model.ToString()} {index}";
+            SuperIOBoardData.Enabled = false;
+            string generic = Run(method, chip, manufacturer, Model.Unknown, null, index, MaxChannels);
+            string code = Run(method, chip, manufacturer, model, null, index, MaxChannels);
+            SuperIOBoardData.Enabled = true;
+            string data = Run(method, chip, manufacturer, model, name, index, MaxChannels);
+
+            string error = generic.StartsWith("error", StringComparison.Ordinal) || Functions(data) != Functions(generic)
+                               ? "this chip cannot be described by the data."
+                               : code != generic
+                                   ? "the board is defined in the data and in the code."
+                                   : name != null && Identification.GetModel(name) != Model.Unknown
+                                       ? $"use the model {Identification.GetModel(name)} instead of the product name."
+                                       : null;
+
+            if (error != null)
             {
-                Console.Error.WriteLine($"{chip} {manufacturer} {model} {index}: this chip cannot be described by the data.");
-                failures++;
-            }
-            else if (Run(method, chip, manufacturer, model, index, MaxChannels) != generic)
-            {
-                Console.Error.WriteLine($"{chip} {manufacturer} {model} {index} is defined in the data and in the code.");
+                Console.Error.WriteLine($"{board}: {error}");
                 failures++;
             }
         }
@@ -114,7 +127,7 @@ switch (args[0])
     }
 }
 
-static bool TryParse(string text, out Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardData.Entry> entries)
+static bool TryParse(string text, out SuperIOBoardData.Boards entries)
 {
     List<string> errors = new();
     entries = SuperIOBoardData.Parse(text, errors);
@@ -124,31 +137,35 @@ static bool TryParse(string text, out Dictionary<(Chip, Manufacturer, Model, int
     return errors.Count == 0;
 }
 
-static string Format(Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardData.Entry> entries)
+static string Format(SuperIOBoardData.Boards entries)
 {
-    // Content of an entry to the models that share it, per chip, manufacturer and index.
-    SortedDictionary<(int Chip, int Manufacturer, int Index), Dictionary<string, List<Model>>> boards = new();
+    // Content of an entry to the boards that share it, per chip, manufacturer and index. Models come first in the order
+    // of the enum, then product names.
+    SortedDictionary<(int Chip, int Manufacturer, int Index), Dictionary<string, List<(int Order, string Name)>>> boards = new();
     int allManufacturers = Enum.GetValues<Manufacturer>().Distinct().Count();
 
-    foreach (var ((chip, manufacturer, model, index), entry) in entries)
+    var all = entries.Models.Select(pair => (pair.Key.Item1, pair.Key.Item2, pair.Key.Item4, Order: (int)pair.Key.Item3, Name: pair.Key.Item3.ToString(), pair.Value))
+                     .Concat(entries.Names.Select(pair => (pair.Key.Item1, pair.Key.Item2, pair.Key.Item4, Order: int.MaxValue, Name: $"\"{pair.Key.Item3}\"", pair.Value)));
+
+    foreach ((Chip chip, Manufacturer manufacturer, int index, int order, string name, SuperIOBoardData.Entry entry) in all)
     {
         string content = Serialize(entry.Voltages, entry.Temperatures, entry.Fans, entry.Controls, MaxChannels);
 
         var key = ((int)chip, (int)manufacturer, index);
-        if (!boards.TryGetValue(key, out Dictionary<string, List<Model>> byContent))
-            boards[key] = byContent = new Dictionary<string, List<Model>>();
+        if (!boards.TryGetValue(key, out var byContent))
+            boards[key] = byContent = new Dictionary<string, List<(int, string)>>();
 
-        if (!byContent.TryGetValue(content, out List<Model> models))
-            byContent[content] = models = new List<Model>();
+        if (!byContent.TryGetValue(content, out var models))
+            byContent[content] = models = new List<(int, string)>();
 
-        models.Add(model);
+        models.Add((order, name));
     }
 
     // The same sensor lists usually serve several chips and both indices, so entries that only differ there share a line.
     var lines = boards.SelectMany(board => board.Value.Select(entry => (board.Key.Chip,
                                                                          board.Key.Manufacturer,
                                                                          board.Key.Index,
-                                                                         Models: string.Join(",", entry.Value.OrderBy(model => model)),
+                                                                         Models: string.Join(",", entry.Value.OrderBy(model => model.Order).ThenBy(model => model.Name, StringComparer.Ordinal).Select(model => model.Name)),
                                                                          Content: entry.Key)))
                       .GroupBy(line => (line.Manufacturer, line.Models, line.Content))
                       .SelectMany(group => group.GroupBy(line => line.Chip)
@@ -201,16 +218,16 @@ static string Snapshot(MethodInfo method, int[] channelCounts)
         {
             foreach (int index in new[] { 0, 1 })
             {
-                string generic = Run(method, chip, manufacturer, Model.Unknown, index, MaxChannels);
+                string generic = Run(method, chip, manufacturer, Model.Unknown, null, index, MaxChannels);
 
                 foreach (Model model in Enum.GetValues<Model>().Distinct())
                 {
-                    if (model != Model.Unknown && Run(method, chip, manufacturer, model, index, MaxChannels) == generic)
+                    if (model != Model.Unknown && Run(method, chip, manufacturer, model, null, index, MaxChannels) == generic)
                         continue;
 
                     output.Append($"{chip} {manufacturer} {model} {index}");
                     foreach (int channels in channelCounts)
-                        output.Append(" | ").Append(Run(method, chip, manufacturer, model, index, channels).Replace('\n', ';').Replace('\t', ' '));
+                        output.Append(" | ").Append(Run(method, chip, manufacturer, model, null, index, channels).Replace('\n', ';').Replace('\t', ' '));
 
                     output.Append('\n');
                 }
@@ -218,16 +235,34 @@ static string Snapshot(MethodInfo method, int[] channelCounts)
         }
     }
 
+    // Boards known only by their product name, in the order of the data.
+    foreach ((Chip chip, Manufacturer manufacturer, string name, int index) in SuperIOBoardData.Embedded.Names.Keys.OrderBy(key => key.ToString(), StringComparer.Ordinal))
+    {
+        output.Append($"{chip} {manufacturer} \"{name}\" {index}");
+        foreach (int channels in channelCounts)
+            output.Append(" | ").Append(Run(method, chip, manufacturer, Model.Unknown, name, index, channels).Replace('\n', ';').Replace('\t', ' '));
+
+        output.Append('\n');
+    }
+
     return output.ToString();
+}
+
+/// <summary>
+/// Gets the read functions, mutex and hardware access of a run, without its sensors.
+/// </summary>
+static string Functions(string run)
+{
+    return string.Join("\n", run.Split('\n').Where(line => line.Length < 2 || line[1] != '\t'));
 }
 
 /// <summary>
 /// Runs the board configuration and writes its sensors, read functions and mutex, or "error" if it throws.
 /// </summary>
-static string Run(MethodInfo method, Chip chip, Manufacturer manufacturer, Model model, int index, int channels)
+static string Run(MethodInfo method, Chip chip, Manufacturer manufacturer, Model model, string productName, int index, int channels)
 {
     StubSuperIO stub = new(chip, channels);
-    object[] arguments = [stub, manufacturer, model, index, null, null, null, null, null, null, null, null, null, null];
+    object[] arguments = [stub, manufacturer, model, productName, index, null, null, null, null, null, null, null, null, null, null];
 
     try
     {
@@ -238,12 +273,12 @@ static string Run(MethodInfo method, Chip chip, Manufacturer manufacturer, Model
         return $"error {exception.InnerException?.GetType().Name}";
     }
 
-    StringBuilder text = new(Serialize((IList<Voltage>)arguments[4], (IList<Temperature>)arguments[5], (IList<Fan>)arguments[6], (IList<Control>)arguments[7], channels));
+    StringBuilder text = new(Serialize((IList<Voltage>)arguments[5], (IList<Temperature>)arguments[6], (IList<Fan>)arguments[7], (IList<Control>)arguments[8], channels));
 
-    foreach (Delegate function in arguments.Skip(8).Take(5).Cast<Delegate>())
+    foreach (Delegate function in arguments.Skip(9).Take(5).Cast<Delegate>())
         text.Append($"fn\t{function.Method.DeclaringType?.Name}.{function.Method.Name}\n");
 
-    if (arguments[13] is Mutex)
+    if (arguments[14] is Mutex)
         text.Append("mutex\n");
 
     if (stub.TouchedHardware)

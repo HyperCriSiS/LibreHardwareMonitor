@@ -38,6 +38,7 @@ internal sealed class SuperIOHardware : Hardware
         GetBoardSpecificConfiguration(superIO,
                                       manufacturer,
                                       model,
+                                      motherboard.SMBios.Board?.ProductName,
                                       index,
                                       out IList<Voltage> v,
                                       out IList<Temperature> t,
@@ -200,6 +201,7 @@ internal sealed class SuperIOHardware : Hardware
         ISuperIO superIO,
         Manufacturer manufacturer,
         Model model,
+        string productName,
         int superIOIndex,
         out IList<Voltage> v,
         out IList<Temperature> t,
@@ -227,7 +229,7 @@ internal sealed class SuperIOHardware : Hardware
 
         // Boards in the data file get their sensor lists from it. Only boards that need their own read functions, a mutex
         // or GPIO access, and the generic configuration of each chip and manufacturer, are defined in the code below.
-        if (SuperIOBoardData.TryGet(superIO.Chip, manufacturer, model, superIOIndex, out SuperIOBoardData.Entry entry))
+        if (SuperIOBoardData.TryGet(superIO.Chip, manufacturer, model, productName, superIOIndex, out SuperIOBoardData.Entry entry))
         {
             v = new List<Voltage>(entry.Voltages);
             t = new List<Temperature>(entry.Temperatures);
