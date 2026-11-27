@@ -235,6 +235,16 @@ static string Snapshot(MethodInfo method, int[] channelCounts)
         }
     }
 
+    // Boards known only by their product name, in the order of the data.
+    foreach ((Chip chip, Manufacturer manufacturer, string name, int index) in SuperIOBoardData.Embedded.Names.Keys.OrderBy(key => key.ToString(), StringComparer.Ordinal))
+    {
+        output.Append($"{chip} {manufacturer} \"{name}\" {index}");
+        foreach (int channels in channelCounts)
+            output.Append(" | ").Append(Run(method, chip, manufacturer, Model.Unknown, name, index, channels).Replace('\n', ';').Replace('\t', ' '));
+
+        output.Append('\n');
+    }
+
     return output.ToString();
 }
 

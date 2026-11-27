@@ -163,7 +163,8 @@ internal static class SuperIOBoardData
                 {
                     string productName = GetProductName(modelName);
                     Model model = Model.Unknown;
-                    if (productName == null && !TryParseName(modelName, out model))
+                    // Unknown stands for every board without a model, so it would hide their generic sensors and product names.
+                    if (productName == null && (!TryParseName(modelName, out model) || model == Model.Unknown))
                     {
                         error($"unknown model {modelName}.");
                         continue;
