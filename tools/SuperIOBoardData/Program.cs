@@ -128,6 +128,7 @@ static string Format(Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardDa
 {
     // Content of an entry to the models that share it, per chip, manufacturer and index.
     SortedDictionary<(int Chip, int Manufacturer, int Index), Dictionary<string, List<Model>>> boards = new();
+    int allManufacturers = Enum.GetValues<Manufacturer>().Distinct().Count();
 
     foreach (var ((chip, manufacturer, model, index), entry) in entries)
     {
@@ -158,7 +159,18 @@ static string Format(Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardDa
                                                                       group.Key.Manufacturer,
                                                                       group.Key.Models,
                                                                       group.Key.Content)))
-                      .OrderBy(line => line.Manufacturer)
+                      // Boards that are the same for several manufacturers share a line too, with * for all of them.
+                      .GroupBy(line => (line.Chips, line.Indices, line.Models, line.Content))
+                      .Select(group => (Manufacturers: group.Count() == allManufacturers
+                                                           ? SuperIOBoardData.AllManufacturers
+                                                           : string.Join(",", group.Select(line => (Manufacturer)line.Manufacturer).OrderBy(manufacturer => manufacturer)),
+                                        group.Key.Chips,
+                                        group.Key.Indices,
+                                        group.Key.Models,
+                                        group.Key.Content,
+                                        First: group.Min(line => line.Manufacturer)))
+                      .OrderBy(line => line.Manufacturers == SuperIOBoardData.AllManufacturers ? -1 : line.First)
+                      .ThenBy(line => line.Manufacturers, StringComparer.Ordinal)
                       .ThenBy(line => line.Models, StringComparer.Ordinal)
                       .ThenBy(line => line.Chips, StringComparer.Ordinal)
                       .ThenBy(line => line.Indices, StringComparer.Ordinal)
@@ -170,7 +182,7 @@ static string Format(Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardDa
 
     foreach (var line in lines)
     {
-        output.Append($"board\t{line.Chips}\t{(Manufacturer)line.Manufacturer}\t{line.Indices}\t{line.Models}\n");
+        output.Append($"board\t{line.Chips}\t{line.Manufacturers}\t{line.Indices}\t{line.Models}\n");
         output.Append(line.Content);
     }
 

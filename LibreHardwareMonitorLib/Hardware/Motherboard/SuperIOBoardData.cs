@@ -20,13 +20,18 @@ namespace LibreHardwareMonitor.Hardware.Motherboard;
 /// access stay in code in <see cref="SuperIOHardware" />. The SuperIOBoardData tool checks that the file parses and that
 /// no board is defined in both places.
 /// <para>
-/// Format, one field per tab: a line <c>board, chips, manufacturer, Super I/O indices, models</c> (lists separated by commas)
-/// starts an entry, followed by lines <c>v, name, index, Ri, Rf, Vf, hidden (0 or 1)</c>, <c>t, name, index</c>,
+/// Format, one field per tab: a line <c>board, chips, manufacturers, Super I/O indices, models</c> (lists separated by commas,
+/// <c>*</c> for every manufacturer) starts an entry, followed by lines <c>v, name, index, Ri, Rf, Vf, hidden (0 or 1)</c>, <c>t, name, index</c>,
 /// <c>f, name, index</c> and <c>c, name, index</c>. Lines starting with # are comments.
 /// </para>
 /// </remarks>
 internal static class SuperIOBoardData
 {
+    /// <summary>
+    /// The manufacturer field that stands for every manufacturer.
+    /// </summary>
+    internal const string AllManufacturers = "*";
+
     private const string ResourceName = "LibreHardwareMonitor.Resources.SuperIOBoards.txt";
 
     private static readonly Lazy<Dictionary<(Chip, Manufacturer, Model, int), Entry>> Entries = new(Load);
@@ -98,10 +103,24 @@ internal static class SuperIOBoardData
         if (fields.Length != 5)
             return false;
 
-        if (!Enum.TryParse(fields[2], out Manufacturer manufacturer))
+        List<Manufacturer> manufacturers = new();
+        if (fields[2] == AllManufacturers)
         {
-            error($"unknown manufacturer {fields[2]}.");
-            return true;
+            foreach (Manufacturer manufacturer in Enum.GetValues(typeof(Manufacturer)))
+            {
+                if (!manufacturers.Contains(manufacturer))
+                    manufacturers.Add(manufacturer);
+            }
+        }
+        else
+        {
+            foreach (string manufacturerName in fields[2].Split(','))
+            {
+                if (Enum.TryParse(manufacturerName, out Manufacturer manufacturer))
+                    manufacturers.Add(manufacturer);
+                else
+                    error($"unknown manufacturer {manufacturerName}.");
+            }
         }
 
         foreach (string chipName in fields[1].Split(','))
@@ -123,11 +142,18 @@ internal static class SuperIOBoardData
                 foreach (string modelName in fields[4].Split(','))
                 {
                     if (!Enum.TryParse(modelName, out Model model))
+                    {
                         error($"unknown model {modelName}.");
-                    else if (entries.ContainsKey((chip, manufacturer, model, index)))
-                        error($"{chip} {manufacturer} {model} {index} is defined twice.");
-                    else
-                        entries[(chip, manufacturer, model, index)] = entry;
+                        continue;
+                    }
+
+                    foreach (Manufacturer manufacturer in manufacturers)
+                    {
+                        if (entries.ContainsKey((chip, manufacturer, model, index)))
+                            error($"{chip} {manufacturer} {model} {index} is defined twice.");
+                        else
+                            entries[(chip, manufacturer, model, index)] = entry;
+                    }
                 }
             }
         }
