@@ -17,8 +17,8 @@ namespace LibreHardwareMonitor.Hardware.Motherboard;
 /// <remarks>
 /// The data only names sensors, picks chip inputs by index and sets the voltage scaling; it never contains register
 /// addresses or anything that writes to the hardware. Boards that need their own read functions, a mutex or GPIO
-/// access stay in code. The file is generated from the code in <see cref="SuperIOHardware" /> by the
-/// SuperIOBoardData tool, which also checks that both give the same sensors.
+/// access stay in code in <see cref="SuperIOHardware" />. The SuperIOBoardData tool checks that the file parses and that
+/// no board is defined in both places.
 /// <para>
 /// Format, one field per tab: a line <c>board, chips, manufacturer, Super I/O indices, models</c> (lists separated by commas)
 /// starts an entry, followed by lines <c>v, name, index, Ri, Rf, Vf, hidden (0 or 1)</c>, <c>t, name, index</c>,
@@ -32,7 +32,7 @@ internal static class SuperIOBoardData
     private static readonly Lazy<Dictionary<(Chip, Manufacturer, Model, int), Entry>> Entries = new(Load);
 
     /// <summary>
-    /// Gets or sets whether the data is used. The tool that generates and checks the data turns it off to run the code.
+    /// Gets or sets whether the data is used. The tool that checks the data turns it off to run the code alone.
     /// </summary>
     internal static bool Enabled { get; set; } = true;
 
@@ -46,69 +46,38 @@ internal static class SuperIOBoardData
     }
 
     /// <summary>
-    /// Parses the data file.
+    /// Parses the data file. A line that does not parse is skipped, so one mistake only affects that line or board.
     /// </summary>
     /// <param name="text">The file content.</param>
+    /// <param name="errors">Receives a message for every skipped line, unknown name and board defined twice, if given.</param>
     /// <returns>The entries by chip, manufacturer, model and Super I/O index.</returns>
-    internal static Dictionary<(Chip, Manufacturer, Model, int), Entry> Parse(string text)
+    internal static Dictionary<(Chip, Manufacturer, Model, int), Entry> Parse(string text, List<string> errors = null)
     {
         Dictionary<(Chip, Manufacturer, Model, int), Entry> entries = new();
         Entry current = null;
+        string[] lines = (text ?? string.Empty).Split('\n');
 
-        foreach (string rawLine in (text ?? string.Empty).Split('\n'))
+        for (int number = 1; number <= lines.Length; number++)
         {
-            string line = rawLine.TrimEnd('\r');
+            string line = lines[number - 1].TrimEnd('\r');
             if (line.Length == 0 || line[0] == '#')
                 continue;
 
             string[] fields = line.Split('\t');
-
-            switch (fields[0])
+            bool parsed = fields[0] switch
             {
-                case "board" when fields.Length == 5:
-                    current = null;
+                "board" => TryParseBoard(fields, entries, out current, message => errors?.Add($"Line {number}: {message}")),
+                "v" when current != null && fields.Length == 7 && TryParseInt(fields[2], out int index) && TryParseFloat(fields[3], out float ri) &&
+                         TryParseFloat(fields[4], out float rf) && TryParseFloat(fields[5], out float vf) && fields[6] is "0" or "1"
+                    => Add(current.Voltages, new Voltage(fields[1], index, ri, rf, vf, fields[6] == "1")),
+                "t" when current != null && fields.Length == 3 && TryParseInt(fields[2], out int index) => Add(current.Temperatures, new Temperature(fields[1], index)),
+                "f" when current != null && fields.Length == 3 && TryParseInt(fields[2], out int index) => Add(current.Fans, new Fan(fields[1], index)),
+                "c" when current != null && fields.Length == 3 && TryParseInt(fields[2], out int index) => Add(current.Controls, new Control(fields[1], index)),
+                _ => false
+            };
 
-                    if (!Enum.TryParse(fields[2], out Manufacturer manufacturer))
-                        break;
-
-                    current = new Entry();
-
-                    foreach (string chipName in fields[1].Split(','))
-                    {
-                        if (!Enum.TryParse(chipName, out Chip chip))
-                            continue;
-
-                        foreach (string indexText in fields[3].Split(','))
-                        {
-                            if (!int.TryParse(indexText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int index))
-                                continue;
-
-                            foreach (string modelName in fields[4].Split(','))
-                            {
-                                if (Enum.TryParse(modelName, out Model model))
-                                    entries[(chip, manufacturer, model, index)] = current;
-                            }
-                        }
-                    }
-
-                    break;
-
-                case "v" when current != null && fields.Length == 7:
-                    current.Voltages.Add(new Voltage(fields[1], ParseInt(fields[2]), ParseFloat(fields[3]), ParseFloat(fields[4]), ParseFloat(fields[5]), fields[6] == "1"));
-                    break;
-
-                case "t" when current != null && fields.Length == 3:
-                    current.Temperatures.Add(new Temperature(fields[1], ParseInt(fields[2])));
-                    break;
-
-                case "f" when current != null && fields.Length == 3:
-                    current.Fans.Add(new Fan(fields[1], ParseInt(fields[2])));
-                    break;
-
-                case "c" when current != null && fields.Length == 3:
-                    current.Controls.Add(new Control(fields[1], ParseInt(fields[2])));
-                    break;
-            }
+            if (!parsed)
+                errors?.Add($"Line {number}: cannot parse \"{line}\".");
         }
 
         return entries;
@@ -122,18 +91,74 @@ internal static class SuperIOBoardData
         return value.ToString("R", CultureInfo.InvariantCulture);
     }
 
-    private static int ParseInt(string text)
+    private static bool TryParseBoard(string[] fields, Dictionary<(Chip, Manufacturer, Model, int), Entry> entries, out Entry entry, Action<string> error)
     {
-        return int.Parse(text, NumberStyles.Integer, CultureInfo.InvariantCulture);
+        // The sensor lines of a board with an unknown name still go into an entry, so they are not reported again.
+        entry = new Entry();
+        if (fields.Length != 5)
+            return false;
+
+        if (!Enum.TryParse(fields[2], out Manufacturer manufacturer))
+        {
+            error($"unknown manufacturer {fields[2]}.");
+            return true;
+        }
+
+        foreach (string chipName in fields[1].Split(','))
+        {
+            if (!Enum.TryParse(chipName, out Chip chip))
+            {
+                error($"unknown chip {chipName}.");
+                continue;
+            }
+
+            foreach (string indexText in fields[3].Split(','))
+            {
+                if (!TryParseInt(indexText, out int index))
+                {
+                    error($"invalid Super I/O index {indexText}.");
+                    continue;
+                }
+
+                foreach (string modelName in fields[4].Split(','))
+                {
+                    if (!Enum.TryParse(modelName, out Model model))
+                        error($"unknown model {modelName}.");
+                    else if (entries.ContainsKey((chip, manufacturer, model, index)))
+                        error($"{chip} {manufacturer} {model} {index} is defined twice.");
+                    else
+                        entries[(chip, manufacturer, model, index)] = entry;
+                }
+            }
+        }
+
+        return true;
     }
 
-    private static float ParseFloat(string text)
+    private static bool Add<T>(List<T> list, T item)
     {
-        return float.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture);
+        list.Add(item);
+        return true;
+    }
+
+    private static bool TryParseInt(string text, out int value)
+    {
+        return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+    }
+
+    private static bool TryParseFloat(string text, out float value)
+    {
+        return float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
     }
 
     /// <summary>
-    /// Reads the embedded data. A damaged file must not stop the motherboard from loading, so the code is used then.
+    /// Gets the entries read from the embedded data.
+    /// </summary>
+    internal static Dictionary<(Chip, Manufacturer, Model, int), Entry> Embedded => Entries.Value;
+
+    /// <summary>
+    /// Reads the embedded data. A file that cannot be read must not stop the motherboard from loading; its boards then
+    /// get the generic sensors of their chip.
     /// </summary>
     private static Dictionary<(Chip, Manufacturer, Model, int), Entry> Load()
     {
@@ -141,7 +166,7 @@ internal static class SuperIOBoardData
         {
             return Parse(ReadResource());
         }
-        catch (Exception exception) when (exception is FormatException or OverflowException or IOException)
+        catch (IOException)
         {
             return new Dictionary<(Chip, Manufacturer, Model, int), Entry>();
         }

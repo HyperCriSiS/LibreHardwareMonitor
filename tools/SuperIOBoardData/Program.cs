@@ -3,126 +3,147 @@
 // Copyright (C) LibreHardwareMonitor and Contributors.
 // All Rights Reserved.
 
-// Generates the Super I/O board data from the board code in SuperIOHardware and checks that the data gives the same
-// sensors as the code.
+// Checks and formats the Super I/O board data, and records the full board configuration for refactors of the board code.
 //
-//   SuperIOBoardData export <file>   writes the data file
-//   SuperIOBoardData verify <file>   fails if the file differs from what the code gives
+//   SuperIOBoardData format <file>     rewrites the data file in its canonical form
+//   SuperIOBoardData verify <file>     fails if the file does not parse, is not canonical, differs from the embedded copy
+//                                      or describes a board that is also defined in code
+//   SuperIOBoardData snapshot <file>   writes the sensors and read functions of every board, chip and Super I/O index
+//   SuperIOBoardData compare <file>    fails if the board configuration differs from a snapshot
 //
-// The code is run for every chip, manufacturer, model and Super I/O index with a stub chip that reads nothing. A board
-// goes into the data only if it differs from the generic configuration of its chip and manufacturer, uses the standard
-// read functions (no own functions, no mutex, no GPIO), and gives the same sensors as the code for every channel count
-// from 0 to MaxChannels. At runtime only channels below the chip's real count become sensors, so the data, written with
-// MaxChannels channels, then matches the code for every chip.
+// The configuration is run for every chip, manufacturer, model and Super I/O index with a stub chip that reads nothing.
 
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using LibreHardwareMonitor.Hardware.Motherboard;
 using LibreHardwareMonitor.Hardware.Motherboard.Lpc;
 
 const int MaxChannels = 64;
-const int CheckedChannels = 40;
+int[] snapshotChannels = [0, 5, 7, 9, 13, 17, 29, MaxChannels];
 
-if (args.Length != 2 || args[0] is not ("export" or "verify"))
+if (args.Length != 2 || args[0] is not ("format" or "verify" or "snapshot" or "compare"))
 {
-    Console.Error.WriteLine("Usage: SuperIOBoardData export|verify <file>");
+    Console.Error.WriteLine("Usage: SuperIOBoardData format|verify|snapshot|compare <file>");
     return 2;
 }
-
-SuperIOBoardData.Enabled = false;
 
 MethodInfo method = typeof(SuperIOHardware).GetMethod("GetBoardSpecificConfiguration", BindingFlags.NonPublic | BindingFlags.Static)
                     ?? throw new InvalidOperationException("GetBoardSpecificConfiguration not found.");
 
-string text = Generate(method);
-
-if (args[0] == "export")
+switch (args[0])
 {
-    File.WriteAllText(args[1], text, new UTF8Encoding(false));
-    Console.WriteLine($"Wrote {args[1]}.");
-    return 0;
-}
-
-string existing = File.Exists(args[1]) ? File.ReadAllText(args[1]).Replace("\r\n", "\n") : string.Empty;
-if (existing != text)
-{
-    Console.Error.WriteLine($"{args[1]} does not match the board code. Run: SuperIOBoardData export {args[1]}");
-    return 1;
-}
-
-// Golden check through the library itself: for every combination in the embedded data, the board configuration with the
-// data must give the same sensors as the code alone, for several channel counts.
-int checkedCount = 0;
-foreach ((Chip chip, Manufacturer manufacturer, Model model, int index) in SuperIOBoardData.Parse(existing).Keys)
-{
-    foreach (int channels in new[] { 0, 5, 7, 9, 13, 17, 29, MaxChannels })
+    case "format":
     {
-        SuperIOBoardData.Enabled = true;
-        string data = Run(method, chip, manufacturer, model, index, channels)?.Serialize(channels);
-        SuperIOBoardData.Enabled = false;
-        string code = Run(method, chip, manufacturer, model, index, channels)?.Serialize(channels);
-
-        if (data == null || data != code)
-        {
-            Console.Error.WriteLine($"{chip} {manufacturer} {model} {index} with {channels} channels: the data path differs from the code.");
+        // Lines that do not parse would be dropped, so they must be fixed by hand first.
+        if (!TryParse(File.ReadAllText(args[1]), out var entries))
             return 1;
-        }
+
+        File.WriteAllText(args[1], Format(entries), new UTF8Encoding(false));
+        Console.WriteLine($"Wrote {args[1]}.");
+        return 0;
     }
 
-    checkedCount++;
+    case "verify":
+    {
+        string existing = File.ReadAllText(args[1]).Replace("\r\n", "\n");
+        if (!TryParse(existing, out var entries))
+            return 1;
+
+        if (Format(entries) != existing)
+        {
+            Console.Error.WriteLine($"{args[1]} is not in canonical form. Run: SuperIOBoardData format {args[1]}");
+            return 1;
+        }
+
+        // Each board is defined in one place: the code must give the generic configuration for every board in the data,
+        // and must run, so the data cannot replace chips with sensors of their own such as IPMI.
+        SuperIOBoardData.Enabled = false;
+        int failures = 0;
+        foreach ((Chip chip, Manufacturer manufacturer, Model model, int index) in entries.Keys)
+        {
+            string generic = Run(method, chip, manufacturer, Model.Unknown, index, MaxChannels);
+            if (generic.StartsWith("error", StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine($"{chip} {manufacturer} {model} {index}: this chip cannot be described by the data.");
+                failures++;
+            }
+            else if (Run(method, chip, manufacturer, model, index, MaxChannels) != generic)
+            {
+                Console.Error.WriteLine($"{chip} {manufacturer} {model} {index} is defined in the data and in the code.");
+                failures++;
+            }
+        }
+
+        if (failures > 0)
+            return 1;
+
+        // The library must load the same boards from its embedded copy, or every board falls back to generic sensors.
+        if (Format(SuperIOBoardData.Embedded) != existing)
+        {
+            Console.Error.WriteLine($"The data embedded in the library differs from {args[1]}.");
+            return 1;
+        }
+
+        Console.WriteLine("The board data is canonical, matches the embedded copy and no board is defined twice.");
+        return 0;
+    }
+
+    case "snapshot":
+        File.WriteAllText(args[1], Snapshot(method, snapshotChannels), new UTF8Encoding(false));
+        Console.WriteLine($"Wrote {args[1]}.");
+        return 0;
+
+    default:
+    {
+        string[] expected = File.ReadAllText(args[1]).Replace("\r\n", "\n").Split('\n');
+        string[] actual = Snapshot(method, snapshotChannels).Split('\n');
+        if (expected.SequenceEqual(actual))
+        {
+            Console.WriteLine("The board configuration matches the snapshot.");
+            return 0;
+        }
+
+        foreach (string line in expected.Except(actual).Take(20))
+            Console.Error.WriteLine($"- {line}");
+
+        foreach (string line in actual.Except(expected).Take(20))
+            Console.Error.WriteLine($"+ {line}");
+
+        return 1;
+    }
 }
 
-Console.WriteLine($"The board data matches the board code; {checkedCount} combinations give the same sensors through the data and the code.");
-return 0;
+static bool TryParse(string text, out Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardData.Entry> entries)
+{
+    List<string> errors = new();
+    entries = SuperIOBoardData.Parse(text, errors);
+    foreach (string error in errors)
+        Console.Error.WriteLine(error);
 
-static string Generate(MethodInfo method)
+    return errors.Count == 0;
+}
+
+static string Format(Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardData.Entry> entries)
 {
     // Content of an entry to the models that share it, per chip, manufacturer and index.
     SortedDictionary<(int Chip, int Manufacturer, int Index), Dictionary<string, List<Model>>> boards = new();
-    int skipped = 0;
 
-    foreach (Chip chip in Enum.GetValues<Chip>().Distinct())
+    foreach (var ((chip, manufacturer, model, index), entry) in entries)
     {
-        foreach (Manufacturer manufacturer in Enum.GetValues<Manufacturer>().Distinct())
-        {
-            foreach (int index in new[] { 0, 1 })
-            {
-                Result baseline = Run(method, chip, manufacturer, Model.Unknown, index, MaxChannels);
-                string baselineText = baseline?.Serialize(MaxChannels);
+        string content = Serialize(entry.Voltages, entry.Temperatures, entry.Fans, entry.Controls, MaxChannels);
 
-                foreach (Model model in Enum.GetValues<Model>().Distinct())
-                {
-                    if (model == Model.Unknown)
-                        continue;
+        var key = ((int)chip, (int)manufacturer, index);
+        if (!boards.TryGetValue(key, out Dictionary<string, List<Model>> byContent))
+            boards[key] = byContent = new Dictionary<string, List<Model>>();
 
-                    Result result = Run(method, chip, manufacturer, model, index, MaxChannels);
-                    if (result == null)
-                        continue;
+        if (!byContent.TryGetValue(content, out List<Model> models))
+            byContent[content] = models = new List<Model>();
 
-                    string content = result.Serialize(MaxChannels);
-                    if (content == baselineText)
-                        continue;
-
-                    if (result.IsSpecial || !result.HasPlainNames || !SameForAllChannelCounts(method, chip, manufacturer, model, index, result))
-                    {
-                        skipped++;
-                        continue;
-                    }
-
-                    var key = ((int)chip, (int)manufacturer, index);
-                    if (!boards.TryGetValue(key, out Dictionary<string, List<Model>> byContent))
-                        boards[key] = byContent = new Dictionary<string, List<Model>>();
-
-                    if (!byContent.TryGetValue(content, out List<Model> models))
-                        byContent[content] = models = new List<Model>();
-
-                    models.Add(model);
-                }
-            }
-        }
+        models.Add(model);
     }
 
-    // The same board code usually serves several chips and both indices, so entries that only differ there share a line.
+    // The same sensor lists usually serve several chips and both indices, so entries that only differ there share a line.
     var lines = boards.SelectMany(board => board.Value.Select(entry => (board.Key.Chip,
                                                                          board.Key.Manufacturer,
                                                                          board.Key.Index,
@@ -144,8 +165,8 @@ static string Generate(MethodInfo method)
                       .ToList();
 
     StringBuilder output = new();
-    output.Append("# Super I/O sensor lists per board, generated by tools/SuperIOBoardData from SuperIOHardware.cs. Do not edit by hand.\n");
-    output.Append("# Boards that need their own read functions, a mutex or GPIO access, or whose lists depend on the channel count, stay in code.\n");
+    output.Append("# Super I/O sensor lists per board; the format is described in SuperIOBoardData.cs. Check with tools/SuperIOBoardData verify, sort with format.\n");
+    output.Append("# Boards that need their own read functions, a mutex or GPIO access, or whose lists depend on the channel count, stay in SuperIOHardware.cs.\n");
 
     foreach (var line in lines)
     {
@@ -153,23 +174,45 @@ static string Generate(MethodInfo method)
         output.Append(line.Content);
     }
 
-    Console.WriteLine($"{lines.Count} entries for {boards.Values.Sum(content => content.Count)} combinations, {skipped} combinations kept in code.");
     return output.ToString();
 }
 
-static bool SameForAllChannelCounts(MethodInfo method, Chip chip, Manufacturer manufacturer, Model model, int index, Result data)
+static string Snapshot(MethodInfo method, int[] channelCounts)
 {
-    for (int channels = 0; channels <= CheckedChannels; channels++)
+    // Every combination that differs from the generic configuration of its chip, manufacturer and index, plus the generic
+    // configurations themselves, so a board that falls back to the generic one shows up as a removed line.
+    StringBuilder output = new();
+
+    foreach (Chip chip in Enum.GetValues<Chip>().Distinct())
     {
-        Result code = Run(method, chip, manufacturer, model, index, channels);
-        if (code == null || code.IsSpecial || code.Serialize(channels) != data.Serialize(channels))
-            return false;
+        foreach (Manufacturer manufacturer in Enum.GetValues<Manufacturer>().Distinct())
+        {
+            foreach (int index in new[] { 0, 1 })
+            {
+                string generic = Run(method, chip, manufacturer, Model.Unknown, index, MaxChannels);
+
+                foreach (Model model in Enum.GetValues<Model>().Distinct())
+                {
+                    if (model != Model.Unknown && Run(method, chip, manufacturer, model, index, MaxChannels) == generic)
+                        continue;
+
+                    output.Append($"{chip} {manufacturer} {model} {index}");
+                    foreach (int channels in channelCounts)
+                        output.Append(" | ").Append(Run(method, chip, manufacturer, model, index, channels).Replace('\n', ';').Replace('\t', ' '));
+
+                    output.Append('\n');
+                }
+            }
+        }
     }
 
-    return true;
+    return output.ToString();
 }
 
-static Result Run(MethodInfo method, Chip chip, Manufacturer manufacturer, Model model, int index, int channels)
+/// <summary>
+/// Runs the board configuration and writes its sensors, read functions and mutex, or "error" if it throws.
+/// </summary>
+static string Run(MethodInfo method, Chip chip, Manufacturer manufacturer, Model model, int index, int channels)
 {
     StubSuperIO stub = new(chip, channels);
     object[] arguments = [stub, manufacturer, model, index, null, null, null, null, null, null, null, null, null, null];
@@ -178,79 +221,45 @@ static Result Run(MethodInfo method, Chip chip, Manufacturer manufacturer, Model
     {
         method.Invoke(null, arguments);
     }
-    catch (TargetInvocationException)
+    catch (TargetInvocationException exception)
     {
-        return null;
+        return $"error {exception.InnerException?.GetType().Name}";
     }
 
-    // A board is special if any read function differs from the ones the configuration sets for an unknown board, even
-    // if a future change defines the special function inside GetBoardSpecificConfiguration itself.
-    MethodInfo[] defaults = DefaultFunctions(method);
-    bool special = arguments[13] != null || stub.TouchedHardware ||
-                   arguments.Skip(8).Take(5).Select((argument, slot) => (argument as Delegate)?.Method != defaults[slot]).Any(differs => differs);
+    StringBuilder text = new(Serialize((IList<Voltage>)arguments[4], (IList<Temperature>)arguments[5], (IList<Fan>)arguments[6], (IList<Control>)arguments[7], channels));
 
-    return new Result((IList<Voltage>)arguments[4], (IList<Temperature>)arguments[5], (IList<Fan>)arguments[6], (IList<Control>)arguments[7], special);
+    foreach (Delegate function in arguments.Skip(8).Take(5).Cast<Delegate>())
+        text.Append($"fn\t{function.Method.DeclaringType?.Name}.{function.Method.Name}\n");
+
+    if (arguments[13] is Mutex)
+        text.Append("mutex\n");
+
+    if (stub.TouchedHardware)
+        text.Append("hardware\n");
+
+    return text.ToString();
 }
 
 /// <summary>
-/// Gets the read functions the configuration sets for an unknown chip and board, which every plain board keeps.
+/// Writes the entries a chip with the given channel count turns into sensors, in the order of the lists.
 /// </summary>
-static MethodInfo[] DefaultFunctions(MethodInfo method)
+static string Serialize(IList<Voltage> voltages, IList<Temperature> temperatures, IList<Fan> fans, IList<Control> controls, int channels)
 {
-    if (DefaultFunctionsCache.Value != null)
-        return DefaultFunctionsCache.Value;
+    StringBuilder text = new();
 
-    object[] arguments = [new StubSuperIO(Chip.Unknown, 1), Manufacturer.Unknown, Model.Unknown, 0, null, null, null, null, null, null, null, null, null, null];
-    method.Invoke(null, arguments);
-    DefaultFunctionsCache.Value = arguments.Skip(8).Take(5).Select(argument => ((Delegate)argument).Method).ToArray();
-    return DefaultFunctionsCache.Value;
-}
+    foreach (Voltage item in voltages.Where(item => item.Index < channels))
+        text.Append($"v\t{item.Name}\t{item.Index}\t{SuperIOBoardData.FormatFloat(item.Ri)}\t{SuperIOBoardData.FormatFloat(item.Rf)}\t{SuperIOBoardData.FormatFloat(item.Vf)}\t{(item.Hidden ? 1 : 0)}\n");
 
-/// <summary>
-/// Holds the default read functions once they are known.
-/// </summary>
-static class DefaultFunctionsCache
-{
-    public static MethodInfo[] Value { get; set; }
-}
+    foreach (Temperature item in temperatures.Where(item => item.Index < channels))
+        text.Append($"t\t{item.Name}\t{item.Index}\n");
 
-/// <summary>
-/// The sensor lists the board code gives for one combination.
-/// </summary>
-sealed class Result(IList<Voltage> voltages, IList<Temperature> temperatures, IList<Fan> fans, IList<Control> controls, bool isSpecial)
-{
-    public bool IsSpecial { get; } = isSpecial;
+    foreach (Fan item in fans.Where(item => item.Index < channels))
+        text.Append($"f\t{item.Name}\t{item.Index}\n");
 
-    /// <summary>
-    /// Gets whether all names can be written to the tab separated file.
-    /// </summary>
-    public bool HasPlainNames => voltages.Select(item => item.Name)
-                                         .Concat(temperatures.Select(item => item.Name))
-                                         .Concat(fans.Select(item => item.Name))
-                                         .Concat(controls.Select(item => item.Name))
-                                         .All(name => name != null && name.IndexOfAny(['\t', '\r', '\n']) < 0);
+    foreach (Control item in controls.Where(item => item.Index < channels))
+        text.Append($"c\t{item.Name}\t{item.Index}\n");
 
-    /// <summary>
-    /// Writes the entries a chip with the given channel count turns into sensors, in the order of the code.
-    /// </summary>
-    public string Serialize(int channels)
-    {
-        StringBuilder text = new();
-
-        foreach (Voltage item in voltages.Where(item => item.Index < channels))
-            text.Append($"v\t{item.Name}\t{item.Index}\t{SuperIOBoardData.FormatFloat(item.Ri)}\t{SuperIOBoardData.FormatFloat(item.Rf)}\t{SuperIOBoardData.FormatFloat(item.Vf)}\t{(item.Hidden ? 1 : 0)}\n");
-
-        foreach (Temperature item in temperatures.Where(item => item.Index < channels))
-            text.Append($"t\t{item.Name}\t{item.Index}\n");
-
-        foreach (Fan item in fans.Where(item => item.Index < channels))
-            text.Append($"f\t{item.Name}\t{item.Index}\n");
-
-        foreach (Control item in controls.Where(item => item.Index < channels))
-            text.Append($"c\t{item.Name}\t{item.Index}\n");
-
-        return text.ToString();
-    }
+    return text.ToString();
 }
 
 /// <summary>
