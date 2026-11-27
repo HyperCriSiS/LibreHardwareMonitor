@@ -7,8 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using BlackSharp.Core.Converters;
-using BlackSharp.Core.Converters.Enums;
 
 namespace LibreHardwareMonitor.Hardware.Storage.StorageSpaces;
 
@@ -111,7 +109,7 @@ public sealed class StorageSpacesPool : Hardware
         r.AppendLine("Storage Spaces Pool");
         r.AppendLine();
         r.AppendLine($"Name: {pool.Name}");
-        r.AppendLine($"ID: {pool.Id}");
+        r.AppendLine($"Pool UUID: {pool.Id}");
         r.AppendLine($"Health Status: {StorageSpacesData.GetHealthStatusText(pool.HealthStatus)}");
         r.AppendLine($"Operational Status: {StorageSpacesData.GetOperationalStatusText(pool.OperationalStatus)}");
         r.AppendLine($"Size: {pool.Size}");
@@ -123,7 +121,8 @@ public sealed class StorageSpacesPool : Hardware
         {
             StorageDevice member = _members.FirstOrDefault(m => m.StorageSpacesObjectId == physicalDisk.ObjectId);
 
-            r.AppendLine($"Physical Disk: {GetName(physicalDisk)}");
+            r.AppendLine($"Physical Disk: {physicalDisk.Name}");
+            r.AppendLine($"  Serial Number: {physicalDisk.SerialNumber ?? "-"}");
             r.AppendLine($"  Shown As: {(member != null ? $"{member.Name} ({member.Identifier}){(member.IsMissing ? ", missing" : "")}" : "-")}");
             r.AppendLine($"  Disk Number: {physicalDisk.DiskNumber?.ToString() ?? "-"}");
             r.AppendLine($"  Health Status: {StorageSpacesData.GetHealthStatusText(physicalDisk.HealthStatus)}");
@@ -187,9 +186,9 @@ public sealed class StorageSpacesPool : Hardware
     {
         _healthSensor.Value = StorageSpacesData.ToSensorValue(pool.HealthStatus);
         _missingDisksSensor.Value = pool.PhysicalDisks.Count(physicalDisk => physicalDisk.IsMissing);
-        _totalSpaceSensor.Value = ToGigaByte(pool.Size);
-        _allocatedSpaceSensor.Value = ToGigaByte(pool.AllocatedSize);
-        _freeSpaceSensor.Value = ToGigaByte(pool.FreeSize);
+        _totalSpaceSensor.Value = ToBytes(pool.Size);
+        _allocatedSpaceSensor.Value = ToBytes(pool.AllocatedSize);
+        _freeSpaceSensor.Value = ToBytes(pool.FreeSize);
         _usedSpaceSensor.Value = pool.Size > 0 && pool.AllocatedSize.HasValue ? 100.0f * pool.AllocatedSize / pool.Size : null;
 
         // Reads 0 while a repair waits to start. A repair can take several passes, each with its
@@ -197,8 +196,9 @@ public sealed class StorageSpacesPool : Hardware
         _repairProgressSensor.Value = pool.RepairProgress;
     }
 
-    private static float? ToGigaByte(ulong? bytes)
+    private static float? ToBytes(ulong? bytes)
     {
-        return bytes.HasValue ? (float)DataUnitConverter.ToGigaByte(bytes.Value, DataUnit.Byte) : null;
+        // Data sensors hold bytes in this library.
+        return bytes.HasValue ? bytes.Value : null;
     }
 }

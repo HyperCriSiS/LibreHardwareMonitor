@@ -325,6 +325,9 @@
   <data name="KindPhysical" xml:space="preserve">
     <value>Physisch</value>
   </data>
+  <data name="KindPool" xml:space="preserve">
+    <value>Speicherpools</value>
+  </data>
   <data name="KindVirtual" xml:space="preserve">
     <value>Virtuell</value>
   </data>

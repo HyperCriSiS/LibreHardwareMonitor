@@ -5,8 +5,6 @@
 
 using System.Collections.Generic;
 using System.Text;
-using BlackSharp.Core.Converters;
-using BlackSharp.Core.Converters.Enums;
 using StorageDeviceDIT = DiskInfoToolkit.Devices.StorageDevice;
 
 namespace LibreHardwareMonitor.Hardware.Storage.StorageSpaces;
@@ -83,9 +81,10 @@ internal abstract class StorageSpacesDiskSensors
             sensor.Value = null;
     }
 
-    protected static float? ToGigaByte(ulong? bytes)
+    protected static float? ToBytes(ulong? bytes)
     {
-        return bytes.HasValue ? (float)DataUnitConverter.ToGigaByte(bytes.Value, DataUnit.Byte) : null;
+        // Data sensors hold bytes in this library.
+        return bytes.HasValue ? bytes.Value : null;
     }
 
     /// <summary>
@@ -125,8 +124,8 @@ internal abstract class StorageSpacesDiskSensors
             }
 
             _healthSensor.Value = StorageSpacesData.ToSensorValue(space.HealthStatus);
-            _allocatedSpaceSensor.Value = ToGigaByte(space.AllocatedSize);
-            _footprintSensor.Value = ToGigaByte(space.FootprintOnPool);
+            _allocatedSpaceSensor.Value = ToBytes(space.AllocatedSize);
+            _footprintSensor.Value = ToBytes(space.FootprintOnPool);
 
             // Reads 0 while a repair waits to start. A repair can take several passes, each with
             // its own total, so this can start again from a lower value.
@@ -179,7 +178,7 @@ internal abstract class StorageSpacesDiskSensors
             }
 
             _healthSensor.Value = StorageSpacesData.ToSensorValue(physicalDisk.HealthStatus);
-            _allocatedSpaceSensor.Value = ToGigaByte(physicalDisk.AllocatedSize);
+            _allocatedSpaceSensor.Value = ToBytes(physicalDisk.AllocatedSize);
         }
 
         public override void AppendReport(StringBuilder r)

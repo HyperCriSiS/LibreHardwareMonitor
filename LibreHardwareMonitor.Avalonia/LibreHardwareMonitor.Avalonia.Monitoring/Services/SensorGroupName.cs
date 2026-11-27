@@ -40,6 +40,7 @@ public static class SensorGroupName
             case "Filter": return LanguageResources.KindFilter;
             case "SSD": return LanguageResources.KindSsd;
             case "HDD": return LanguageResources.KindHdd;
+            case "Pool": return LanguageResources.KindPool;
             case "Removable": return LanguageResources.KindRemovable;
             default: return LanguageResources.KindOther;
         }

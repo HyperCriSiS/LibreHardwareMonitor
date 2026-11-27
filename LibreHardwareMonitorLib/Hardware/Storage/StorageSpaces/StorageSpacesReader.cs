@@ -24,12 +24,21 @@ internal static class StorageSpacesReader
     /// </summary>
     private const int JobStateShuttingDown = 6;
 
+    /// <summary>
+    /// Limits how long a read waits for the storage provider, which can hang after resume or with some drivers, so
+    /// opening the storage hardware cannot block. A read that times out fails like any other WMI error.
+    /// </summary>
+    private static EnumerationOptions CreateOptions()
+    {
+        return new EnumerationOptions { Timeout = TimeSpan.FromSeconds(5) };
+    }
+
     public static List<StorageSpacesPoolInfo> Read()
     {
         var pools = new List<StorageSpacesPoolInfo>();
         bool hasPrimordialPool = false;
 
-        using (var searcher = new ManagementObjectSearcher(Scope, "SELECT * FROM MSFT_StoragePool"))
+        using (var searcher = new ManagementObjectSearcher(Scope, "SELECT * FROM MSFT_StoragePool", CreateOptions()))
         using (ManagementObjectCollection collection = searcher.Get())
         {
             foreach (ManagementBaseObject item in collection)
@@ -139,7 +148,7 @@ internal static class StorageSpacesReader
     {
         var progress = new Dictionary<string, JobProgress>(StringComparer.OrdinalIgnoreCase);
 
-        using (var searcher = new ManagementObjectSearcher(Scope, "SELECT * FROM MSFT_StorageJob"))
+        using (var searcher = new ManagementObjectSearcher(Scope, "SELECT * FROM MSFT_StorageJob", CreateOptions()))
         using (ManagementObjectCollection collection = searcher.Get())
         {
             foreach (ManagementBaseObject item in collection)
@@ -185,7 +194,7 @@ internal static class StorageSpacesReader
     /// </summary>
     private static IEnumerable<ManagementObject> GetRelated(ManagementObject source, string resultClass)
     {
-        using ManagementObjectCollection related = source.GetRelated(resultClass);
+        using ManagementObjectCollection related = source.GetRelated(resultClass, null, null, null, null, null, false, CreateOptions());
 
         foreach (ManagementBaseObject item in related)
             yield return (ManagementObject)item;
@@ -200,7 +209,7 @@ internal static class StorageSpacesReader
 
         try
         {
-            related = job.GetRelated(resultClass);
+            related = job.GetRelated(resultClass, null, null, null, null, null, false, CreateOptions());
         }
         catch (ManagementException)
         {

@@ -29,11 +29,12 @@ public static class SensorValueFormatter
 
         if (sensorType == SensorType.Health)
         {
-            return value switch
+            // Truncated like SensorHealth.ToDisplayString, so an average shows the best state it reached.
+            return (int?)value switch
             {
-                SensorHealth.Healthy => LanguageResources.ValueHealthy,
-                SensorHealth.Warning => LanguageResources.ValueHealthWarning,
-                SensorHealth.Critical => LanguageResources.ValueHealthCritical,
+                (int)SensorHealth.Healthy => LanguageResources.ValueHealthy,
+                (int)SensorHealth.Warning => LanguageResources.ValueHealthWarning,
+                (int)SensorHealth.Critical => LanguageResources.ValueHealthCritical,
                 _ => LanguageResources.ValueHealthUnknown
             };
         }
