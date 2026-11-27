@@ -108,7 +108,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The tool that generates and checks Resources/SuperIOBoards.txt runs the board code. -->
+    <!-- The tool that checks Resources/SuperIOBoards.txt runs the board code and reads the embedded data. -->
     <InternalsVisibleTo Include="SuperIOBoardData" />
   </ItemGroup>
 

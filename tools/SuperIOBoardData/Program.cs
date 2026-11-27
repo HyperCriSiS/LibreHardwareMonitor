@@ -6,7 +6,8 @@
 // Checks and formats the Super I/O board data, and records the full board configuration for refactors of the board code.
 //
 //   SuperIOBoardData format <file>     rewrites the data file in its canonical form
-//   SuperIOBoardData verify <file>     fails if the file is not canonical or a board in it is also defined in code
+//   SuperIOBoardData verify <file>     fails if the file does not parse, is not canonical, differs from the embedded copy
+//                                      or describes a board that is also defined in code
 //   SuperIOBoardData snapshot <file>   writes the sensors and read functions of every board, chip and Super I/O index
 //   SuperIOBoardData compare <file>    fails if the board configuration differs from a snapshot
 //
@@ -34,8 +35,11 @@ switch (args[0])
 {
     case "format":
     {
-        string text = Format(File.ReadAllText(args[1]));
-        File.WriteAllText(args[1], text, new UTF8Encoding(false));
+        // Lines that do not parse would be dropped, so they must be fixed by hand first.
+        if (!TryParse(File.ReadAllText(args[1]), out var entries))
+            return 1;
+
+        File.WriteAllText(args[1], Format(entries), new UTF8Encoding(false));
         Console.WriteLine($"Wrote {args[1]}.");
         return 0;
     }
@@ -43,21 +47,28 @@ switch (args[0])
     case "verify":
     {
         string existing = File.ReadAllText(args[1]).Replace("\r\n", "\n");
+        if (!TryParse(existing, out var entries))
+            return 1;
 
-        // Unknown chips, manufacturers or models, or malformed lines, are dropped by the parser and so change the text.
-        if (Format(existing) != existing)
+        if (Format(entries) != existing)
         {
-            Console.Error.WriteLine($"{args[1]} is not in canonical form or has lines that do not parse. Run: SuperIOBoardData format {args[1]}");
+            Console.Error.WriteLine($"{args[1]} is not in canonical form. Run: SuperIOBoardData format {args[1]}");
             return 1;
         }
 
-        // Each board is defined in one place: the code must give the generic configuration for every board in the data.
+        // Each board is defined in one place: the code must give the generic configuration for every board in the data,
+        // and must run, so the data cannot replace chips with sensors of their own such as IPMI.
         SuperIOBoardData.Enabled = false;
         int failures = 0;
-        foreach ((Chip chip, Manufacturer manufacturer, Model model, int index) in SuperIOBoardData.Parse(existing).Keys)
+        foreach ((Chip chip, Manufacturer manufacturer, Model model, int index) in entries.Keys)
         {
             string generic = Run(method, chip, manufacturer, Model.Unknown, index, MaxChannels);
-            if (Run(method, chip, manufacturer, model, index, MaxChannels) != generic)
+            if (generic.StartsWith("error", StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine($"{chip} {manufacturer} {model} {index}: this chip cannot be described by the data.");
+                failures++;
+            }
+            else if (Run(method, chip, manufacturer, model, index, MaxChannels) != generic)
             {
                 Console.Error.WriteLine($"{chip} {manufacturer} {model} {index} is defined in the data and in the code.");
                 failures++;
@@ -67,7 +78,14 @@ switch (args[0])
         if (failures > 0)
             return 1;
 
-        Console.WriteLine("The board data is canonical and no board is defined twice.");
+        // The library must load the same boards from its embedded copy, or every board falls back to generic sensors.
+        if (Format(SuperIOBoardData.Embedded) != existing)
+        {
+            Console.Error.WriteLine($"The data embedded in the library differs from {args[1]}.");
+            return 1;
+        }
+
+        Console.WriteLine("The board data is canonical, matches the embedded copy and no board is defined twice.");
         return 0;
     }
 
@@ -96,12 +114,22 @@ switch (args[0])
     }
 }
 
-static string Format(string text)
+static bool TryParse(string text, out Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardData.Entry> entries)
+{
+    List<string> errors = new();
+    entries = SuperIOBoardData.Parse(text, errors);
+    foreach (string error in errors)
+        Console.Error.WriteLine(error);
+
+    return errors.Count == 0;
+}
+
+static string Format(Dictionary<(Chip, Manufacturer, Model, int), SuperIOBoardData.Entry> entries)
 {
     // Content of an entry to the models that share it, per chip, manufacturer and index.
     SortedDictionary<(int Chip, int Manufacturer, int Index), Dictionary<string, List<Model>>> boards = new();
 
-    foreach (var ((chip, manufacturer, model, index), entry) in SuperIOBoardData.Parse(text))
+    foreach (var ((chip, manufacturer, model, index), entry) in entries)
     {
         string content = Serialize(entry.Voltages, entry.Temperatures, entry.Fans, entry.Controls, MaxChannels);
 
