@@ -325,6 +325,9 @@
   <data name="KindPhysical" xml:space="preserve">
     <value>Physical</value>
   </data>
+  <data name="KindPool" xml:space="preserve">
+    <value>Storage pools</value>
+  </data>
   <data name="KindVirtual" xml:space="preserve">
     <value>Virtual</value>
   </data>
@@ -426,6 +429,21 @@
   </data>
   <data name="GroupHumidity" xml:space="preserve">
     <value>Humidity Levels</value>
+  </data>
+  <data name="GroupHealth" xml:space="preserve">
+    <value>Health</value>
+  </data>
+  <data name="ValueHealthy" xml:space="preserve">
+    <value>Healthy</value>
+  </data>
+  <data name="ValueHealthWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="ValueHealthCritical" xml:space="preserve">
+    <value>Critical</value>
+  </data>
+  <data name="ValueHealthUnknown" xml:space="preserve">
+    <value>Unknown</value>
   </data>
   <data name="GroupOther" xml:space="preserve">
     <value>Other</value>

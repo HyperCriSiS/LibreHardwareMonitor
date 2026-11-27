@@ -89,7 +89,7 @@ public static class SensorTreeGrouping
     private static readonly (HardwareType Type, string Key, string Property, string[] Kinds)[] Families =
     [
         (HardwareType.Network, "network", "Connection", ["Physical", "Virtual", "Filter"]),
-        (HardwareType.Storage, "storage", "Drive type", ["SSD", "HDD", "Removable", "Virtual"]),
+        (HardwareType.Storage, "storage", "Drive type", ["SSD", "HDD", "Pool", "Removable", "Virtual"]),
         (HardwareType.Memory, "memory", null, [])
     ];
 
@@ -106,20 +106,20 @@ public static class SensorTreeGrouping
 
         foreach (SensorTreeNodeSnapshot child in children)
         {
-            int family = Array.FindIndex(Families, f => child.Kind == SensorTreeNodeKind.Hardware && f.Type == child.HardwareType);
+            int family = Array.FindIndex(Families, f => child.Kind == SensorTreeNodeKind.Hardware && f.Type == GetFamily(child.HardwareType));
             if (family < 0)
             {
                 result.Add(child);
                 continue;
             }
 
-            if (!done.Add(child.HardwareType.Value))
+            if (!done.Add(GetFamily(child.HardwareType).Value))
             {
                 continue;
             }
 
             (HardwareType type, string key, string property, string[] kinds) = Families[family];
-            List<SensorTreeNodeSnapshot> members = children.Where(c => c.Kind == SensorTreeNodeKind.Hardware && c.HardwareType == type).ToList();
+            List<SensorTreeNodeSnapshot> members = children.Where(c => c.Kind == SensorTreeNodeKind.Hardware && GetFamily(c.HardwareType) == type).ToList();
 
             if (members.Count == 1)
             {
@@ -143,10 +143,21 @@ public static class SensorTreeGrouping
     }
 
     /// <summary>
+    /// Gets the family a hardware type is grouped in: Storage Spaces pools go with the drives.
+    /// </summary>
+    private static HardwareType? GetFamily(HardwareType? type)
+    {
+        return type == HardwareType.StorageSpaces ? HardwareType.Storage : type;
+    }
+
+    /// <summary>
     /// Gets the kind of a device from its properties, or "Other" if it is unknown.
     /// </summary>
     private static string GetKind(SensorTreeNodeSnapshot node, string property, string[] kinds)
     {
+        if (node.HardwareType == HardwareType.StorageSpaces)
+            return "Pool";
+
         return property != null && node.Properties != null && node.Properties.TryGetValue(property, out string kind) && kinds.Contains(kind) ? kind : "Other";
     }
 

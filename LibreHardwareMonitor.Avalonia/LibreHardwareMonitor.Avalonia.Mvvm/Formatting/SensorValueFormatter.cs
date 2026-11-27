@@ -27,6 +27,18 @@ public static class SensorValueFormatter
         if (!sensorType.HasValue)
             return string.Empty;
 
+        if (sensorType == SensorType.Health)
+        {
+            // Truncated like SensorHealth.ToDisplayString, so an average shows the best state it reached.
+            return (int?)value switch
+            {
+                (int)SensorHealth.Healthy => LanguageResources.ValueHealthy,
+                (int)SensorHealth.Warning => LanguageResources.ValueHealthWarning,
+                (int)SensorHealth.Critical => LanguageResources.ValueHealthCritical,
+                _ => LanguageResources.ValueHealthUnknown
+            };
+        }
+
         if (!value.HasValue)
             return LanguageResources.ValueUnavailable;
 

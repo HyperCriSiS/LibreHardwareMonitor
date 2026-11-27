@@ -289,6 +289,7 @@ public sealed class SensorWebServer : IDisposable
             SensorType.Noise => "Noise Levels",
             SensorType.Conductivity => "Conductivities",
             SensorType.Humidity => "Humidity Levels",
+            SensorType.Health => "Health",
             _ => type.ToString()
         };
     }
@@ -298,6 +299,9 @@ public sealed class SensorWebServer : IDisposable
     /// </summary>
     private static string Format(SensorType? type, float? value)
     {
+        if (type == SensorType.Health)
+            return SensorHealth.ToDisplayString(value);
+
         if (value is not { } v)
             return "-";
 
