@@ -50,3 +50,4 @@ Changes taken from open pull requests of the original LibreHardwareMonitor proje
 | Add or update the MSI MAG B650 Tomahawk WiFi, ASUS ROG Crosshair VI Hero, ROG Crosshair X870E Glacial, ROG Crosshair X670E Hero and Gene, ROG Strix B850-I | 2645 | irusanov |
 | Add the Gigabyte Z890 Aorus Master | 2512 | ForgiveForGit |
 | Read the Cooler Master XG750 Plus Platinum PSU over USB | 2643 | loredavid |
+| Monitor Windows Storage Spaces: pools with health, capacity, missing disks and repair progress, member disks under their pool, space details on the space's disk (adapted: shown in the Avalonia app and its web server, WinForms parts left out) | 2541 | scardus |

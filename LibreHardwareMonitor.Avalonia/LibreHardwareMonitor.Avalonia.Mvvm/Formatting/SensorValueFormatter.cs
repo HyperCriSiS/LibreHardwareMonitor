@@ -27,6 +27,17 @@ public static class SensorValueFormatter
         if (!sensorType.HasValue)
             return string.Empty;
 
+        if (sensorType == SensorType.Health)
+        {
+            return value switch
+            {
+                SensorHealth.Healthy => LanguageResources.ValueHealthy,
+                SensorHealth.Warning => LanguageResources.ValueHealthWarning,
+                SensorHealth.Critical => LanguageResources.ValueHealthCritical,
+                _ => LanguageResources.ValueHealthUnknown
+            };
+        }
+
         if (!value.HasValue)
             return LanguageResources.ValueUnavailable;
 

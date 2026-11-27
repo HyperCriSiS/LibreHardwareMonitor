@@ -44,7 +44,8 @@ internal static class SensorIconName
             case HardwareType.GpuNvidia: return "nvidia.png";
             case HardwareType.GpuAmd: return "amd.png";
             case HardwareType.GpuIntel: return "intel.png";
-            case HardwareType.Storage: return "hdd.png";
+            case HardwareType.Storage:
+            case HardwareType.StorageSpaces: return "hdd.png";
             case HardwareType.Motherboard: return "mainboard.png";
             case HardwareType.SuperIO:
             case HardwareType.EmbeddedController: return "chip.png";
@@ -87,6 +88,7 @@ internal static class SensorIconName
             case SensorType.Noise: return "loudspeaker.png";
             case SensorType.Conductivity: return "voltage.png";
             case SensorType.Humidity: return "humidity.png";
+            case SensorType.Health: return "level.png";
             default: return "chip.png";
         }
     }

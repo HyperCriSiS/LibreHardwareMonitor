@@ -56,6 +56,7 @@ public static class SensorCategoryName
             case SensorType.Noise: return LanguageResources.GroupNoise;
             case SensorType.Conductivity: return LanguageResources.GroupConductivities;
             case SensorType.Humidity: return LanguageResources.GroupHumidity;
+            case SensorType.Health: return LanguageResources.GroupHealth;
             default: return LanguageResources.GroupOther;
         }
     }
